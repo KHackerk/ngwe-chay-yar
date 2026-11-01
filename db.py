@@ -366,10 +366,24 @@ def _migrate(conn, is_pg):
     users.session_version backs session invalidation on admin password
     reset: every login stamps the version into the session cookie, and
     current_user()/the admin gate reject a session whose stamp is stale.
+
+    transactions.created_at backfill: rows written before created_at was
+    recorded carry '' — the 48-hour edit/delete lock needs a real
+    timestamp, so empty values are backfilled from the transaction's own
+    date at the START of that day (server-local, matching the ISO format
+    _now() writes). A legacy row dated today therefore keeps the rest of
+    its 48h window from midnight; anything dated 2+ days ago is already
+    locked. ``||`` concatenation is valid in both SQLite and Postgres,
+    and the UPDATE is a no-op once no empty values remain (idempotent).
     """
     _add_column(conn, is_pg, "transactions", "account_id", "INTEGER")
+    _add_column(conn, is_pg, "transactions", "created_at",
+                "TEXT NOT NULL DEFAULT ''")
     _add_column(conn, is_pg, "users", "session_version",
                 "INTEGER NOT NULL DEFAULT 0")
+    conn.execute(
+        "UPDATE transactions SET created_at = txn_date || 'T00:00:00' "
+        "WHERE (created_at IS NULL OR created_at = '') AND txn_date != ''")
     conn.commit()
 
 

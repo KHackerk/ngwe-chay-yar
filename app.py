@@ -8,7 +8,7 @@ import json
 import os
 import re
 import uuid
-from datetime import date, datetime
+from datetime import date, datetime, timedelta
 
 from flask import (
     Flask,
@@ -276,6 +276,33 @@ def logout():
 # Serializers
 # ---------------------------------------------------------------------------
 
+# Transactions may be edited or deleted only within 48 hours of their
+# CREATION (created_at, server clock — the same clock _now()/_today()
+# already use as the app's single time source). After that they are
+# locked forever; editing never touches created_at, so the window can
+# never be extended.
+TXN_LOCK_WINDOW = timedelta(hours=48)
+
+
+def _created_dt(value):
+    """Parse a stored created_at (ISO, server-local) to a datetime."""
+    if not value:
+        return None
+    try:
+        return datetime.fromisoformat(str(value).replace(" ", "T"))
+    except ValueError:
+        return None
+
+
+def _txn_locked(row):
+    """True when the row's 48h edit/delete window has closed. A missing
+    or unparseable created_at fails safe: locked."""
+    created = _created_dt(row.get("created_at"))
+    if created is None:
+        return True
+    return datetime.now() - created >= TXN_LOCK_WINDOW
+
+
 def _txn(row):
     return {
         "id": row["id"],
@@ -285,6 +312,8 @@ def _txn(row):
         "txn_date": row["txn_date"],
         "note": row.get("note") or "",
         "account_id": row.get("account_id"),
+        "created_at": row.get("created_at") or "",
+        "locked": _txn_locked(row),
     }
 
 
@@ -509,18 +538,20 @@ def api_state():
     })
 
 
-@app.route("/api/transactions", methods=["POST"])
-@login_required
-def api_add_transaction():
-    user = current_user()
-    data = request.get_json(silent=True) or {}
+def _validate_txn(user, data):
+    """Shared create/edit validation for transactions.
+
+    Returns ((kind, amount, account_id), None) or (None, error_response).
+    Wallet linkage: when account_id is present it MUST be one of the
+    session user's own accounts; once the user has at least one wallet a
+    wallet is REQUIRED (the SPA always sends the selected one then) — a
+    user with no wallets at all may still save unlinked transactions,
+    which count toward totals/charts but move no wallet.
+    """
     kind = data.get("kind")
     amount = _int(data.get("amount"), 0)
     if kind not in ("income", "expense") or amount <= 0:
-        return jsonify({"error": "invalid"}), 400
-    # Wallet linkage: account_id is optional (unlinked transactions still
-    # count toward totals/charts but move no wallet), but when present it
-    # MUST be one of the session user's own accounts.
+        return None, (jsonify({"error": "invalid"}), 400)
     account_id = data.get("account_id")
     if account_id is not None:
         account_id = _int(account_id, -1)
@@ -528,7 +559,22 @@ def api_add_transaction():
             "SELECT id FROM accounts WHERE id = ? AND user_id = ?",
             (account_id, user["id"]))
         if not owned:
-            return jsonify({"error": "bad_account"}), 400
+            return None, (jsonify({"error": "bad_account"}), 400)
+    elif db.q1("SELECT id FROM accounts WHERE user_id = ? LIMIT 1",
+               (user["id"],)):
+        return None, (jsonify({"error": "wallet_required"}), 400)
+    return (kind, amount, account_id), None
+
+
+@app.route("/api/transactions", methods=["POST"])
+@login_required
+def api_add_transaction():
+    user = current_user()
+    data = request.get_json(silent=True) or {}
+    vals, err = _validate_txn(user, data)
+    if err:
+        return err
+    kind, amount, account_id = vals
     txn_date = (data.get("txn_date") or _today())[:10]
     new_id = db.insert(
         "INSERT INTO transactions (user_id, kind, amount, category, txn_date, "
@@ -539,17 +585,347 @@ def api_add_transaction():
     return jsonify({"id": new_id})
 
 
+@app.route("/api/transactions/<int:txn_id>", methods=["PUT"])
+@login_required
+def api_update_transaction(txn_id):
+    """Edit a transaction inside its 48-hour window. created_at is
+    deliberately NOT updated — editing never extends the lock window.
+    Balances and month figures are computed from transactions, so the
+    edit shows up everywhere (wallets, Home, Activity) automatically."""
+    user = current_user()
+    row = db.q1("SELECT * FROM transactions WHERE id = ? AND user_id = ?",
+                (txn_id, user["id"]))
+    if not row:
+        return jsonify({"error": "not_found"}), 404
+    if _txn_locked(row):
+        return jsonify({"error": "locked"}), 403
+    data = request.get_json(silent=True) or {}
+    vals, err = _validate_txn(user, data)
+    if err:
+        return err
+    kind, amount, account_id = vals
+    txn_date = (data.get("txn_date") or row["txn_date"] or _today())[:10]
+    db.execute(
+        "UPDATE transactions SET kind = ?, amount = ?, category = ?, "
+        "txn_date = ?, note = ?, account_id = ? "
+        "WHERE id = ? AND user_id = ?",
+        (kind, amount, str(data.get("category") or ""), txn_date,
+         str(data.get("note") or ""), account_id, txn_id, user["id"]),
+    )
+    return jsonify({"ok": True})
+
+
 @app.route("/api/transactions/<int:txn_id>", methods=["DELETE"])
 @login_required
 def api_delete_transaction(txn_id):
     user = current_user()
-    row = db.q1("SELECT id FROM transactions WHERE id = ? AND user_id = ?",
+    row = db.q1("SELECT * FROM transactions WHERE id = ? AND user_id = ?",
                 (txn_id, user["id"]))
     if not row:
         return jsonify({"error": "not_found"}), 404
+    if _txn_locked(row):
+        return jsonify({"error": "locked"}), 403
     db.execute("DELETE FROM transactions WHERE id = ? AND user_id = ?",
                (txn_id, user["id"]))
     return jsonify({"ok": True})
+
+
+# ---------------------------------------------------------------------------
+# Excel export (Part B). All workbook text comes from EXPORT_STRINGS in
+# the caller's language — the SPA's category names are mirrored here via
+# _EXPORT_CAT_KEY (same mapping as the SPA's CAT_KEY) so a category is
+# named identically in the app and in the export. Month names are
+# hardcoded per language (no OS locale dependence). Amounts are bare
+# numbers — no currency text anywhere, as everywhere in this app.
+# ---------------------------------------------------------------------------
+
+_EXPORT_CAT_KEY = {
+    "Food": "cat_food", "Transport": "cat_transport", "Bills": "cat_bills",
+    "Shopping": "cat_shopping", "Health": "cat_health",
+    "Entertainment": "cat_entertainment", "Education": "cat_education",
+    "Other": "cat_other", "Salary": "cat_salary", "Business": "cat_business",
+    "Freelance": "cat_freelance", "Investment": "cat_investment",
+}
+
+_EXPORT_MONTHS = {
+    "en": ["January", "February", "March", "April", "May", "June", "July",
+           "August", "September", "October", "November", "December"],
+    "my": ["ဇန်နဝါရီ", "ဖေဖော်ဝါရီ", "မတ်", "ဧပြီ", "မေ", "ဇွန်", "ဇူလိုင်",
+           "ဩဂုတ်", "စက်တင်ဘာ", "အောက်တိုဘာ", "နိုဝင်ဘာ", "ဒီဇင်ဘာ"],
+    "zh": ["一月", "二月", "三月", "四月", "五月", "六月", "七月", "八月",
+           "九月", "十月", "十一月", "十二月"],
+    "th": ["มกราคม", "กุมภาพันธ์", "มีนาคม", "เมษายน", "พฤษภาคม",
+           "มิถุนายน", "กรกฎาคม", "สิงหาคม", "กันยายน", "ตุลาคม",
+           "พฤศจิกายน", "ธันวาคม"],
+}
+
+EXPORT_STRINGS = {
+    "en": {
+        "report_title": "Income & Expense Report",
+        "sheet_summary": "Summary", "sheet_details": "Details",
+        "from_label": "From", "to_label": "To",
+        "month": "Month", "income": "Income", "expenses": "Expenses",
+        "leftover": "Leftover", "total": "Total",
+        "date": "Date", "type": "Type", "category": "Category",
+        "wallet": "Wallet", "note": "Note", "amount": "Amount",
+        "income_total": "Income total", "expenses_total": "Expenses total",
+        "type_income": "Income", "type_expense": "Expense",
+        "cat_food": "Food", "cat_transport": "Transport",
+        "cat_bills": "Bills", "cat_shopping": "Shopping",
+        "cat_health": "Health", "cat_entertainment": "Entertainment",
+        "cat_education": "Education", "cat_other": "Other",
+        "cat_salary": "Salary", "cat_business": "Business",
+        "cat_freelance": "Freelance", "cat_investment": "Investment",
+    },
+    "my": {
+        "report_title": "ဝင်ငွေနှင့် အသုံးစရိတ် အစီရင်ခံစာ",
+        "sheet_summary": "အကျဉ်းချုပ်", "sheet_details": "အသေးစိတ်",
+        "from_label": "မှ", "to_label": "အထိ",
+        "month": "လ", "income": "ဝင်ငွေ", "expenses": "အသုံးစရိတ်",
+        "leftover": "ကျန်ငွေ", "total": "စုစုပေါင်း",
+        "date": "ရက်စွဲ", "type": "အမျိုးအစား",
+        "category": "အမျိုးအစား အမည်",
+        "wallet": "ပိုက်ဆံအိတ်", "note": "မှတ်ချက်", "amount": "ပမာဏ",
+        "income_total": "ဝင်ငွေ စုစုပေါင်း",
+        "expenses_total": "အသုံးစရိတ် စုစုပေါင်း",
+        "type_income": "ဝင်ငွေ", "type_expense": "အသုံးစရိတ်",
+        "cat_food": "အစားအစာ", "cat_transport": "သယ်ယူပို့ဆောင်ရေး",
+        "cat_bills": "ဘေလ်များ", "cat_shopping": "စျေးဝယ်ခြင်း",
+        "cat_health": "ကျန်းမာရေး", "cat_entertainment": "ဖျော်ဖြေရေး",
+        "cat_education": "ပညာရေး", "cat_other": "အခြား",
+        "cat_salary": "လစာ", "cat_business": "စီးပွားရေး",
+        "cat_freelance": "အလွတ်တန်း လုပ်ငန်း",
+        "cat_investment": "ရင်းနှီးမြှုပ်နှံမှု",
+    },
+    "zh": {
+        "report_title": "收入与支出报告",
+        "sheet_summary": "汇总", "sheet_details": "明细",
+        "from_label": "从", "to_label": "至",
+        "month": "月份", "income": "收入", "expenses": "支出",
+        "leftover": "结余", "total": "总计",
+        "date": "日期", "type": "类型", "category": "类别",
+        "wallet": "钱包", "note": "备注", "amount": "金额",
+        "income_total": "收入总计", "expenses_total": "支出总计",
+        "type_income": "收入", "type_expense": "支出",
+        "cat_food": "食品", "cat_transport": "交通",
+        "cat_bills": "账单", "cat_shopping": "购物",
+        "cat_health": "健康", "cat_entertainment": "娱乐",
+        "cat_education": "教育", "cat_other": "其他",
+        "cat_salary": "工资", "cat_business": "商业",
+        "cat_freelance": "自由职业", "cat_investment": "投资",
+    },
+    "th": {
+        "report_title": "รายงานรายรับ–รายจ่าย",
+        "sheet_summary": "สรุป", "sheet_details": "รายละเอียด",
+        "from_label": "ตั้งแต่", "to_label": "ถึง",
+        "month": "เดือน", "income": "รายได้", "expenses": "ค่าใช้จ่าย",
+        "leftover": "เงินคงเหลือ", "total": "รวมทั้งหมด",
+        "date": "วันที่", "type": "ประเภท", "category": "หมวดหมู่",
+        "wallet": "กระเป๋าเงิน", "note": "หมายเหตุ", "amount": "จำนวนเงิน",
+        "income_total": "รายได้รวม", "expenses_total": "ค่าใช้จ่ายรวม",
+        "type_income": "รายได้", "type_expense": "ค่าใช้จ่าย",
+        "cat_food": "อาหาร", "cat_transport": "การเดินทาง",
+        "cat_bills": "บิลและค่าสาธารณูปโภค", "cat_shopping": "ช้อปปิ้ง",
+        "cat_health": "สุขภาพ", "cat_entertainment": "ความบันเทิง",
+        "cat_education": "การศึกษา", "cat_other": "อื่นๆ",
+        "cat_salary": "เงินเดือน", "cat_business": "ธุรกิจ",
+        "cat_freelance": "ฟรีแลนซ์", "cat_investment": "การลงทุน",
+    },
+}
+
+
+def _export_month_label(prefix, lang):
+    """'2026-10' -> localised 'October 2026' (month names hardcoded)."""
+    try:
+        year, month = int(prefix[:4]), int(prefix[5:7])
+        return "%s %d" % (_EXPORT_MONTHS[lang][month - 1], year)
+    except (ValueError, IndexError, KeyError):
+        return prefix
+
+
+@app.route("/api/export.xlsx")
+@login_required
+def api_export_xlsx():
+    """Download the caller's own transactions in [from, to] (by txn_date,
+    inclusive) as a styled .xlsx: a monthly Summary sheet and a
+    month-grouped Details sheet, fully in the requested/stored language.
+    Figures are summed from the same transaction rows /api/state serves.
+    Months listed are those with at least one transaction in range."""
+    from io import BytesIO
+
+    from openpyxl import Workbook
+    from openpyxl.styles import Border, Font, PatternFill, Side
+
+    user = current_user()
+    d_from = (request.args.get("from") or "").strip()
+    d_to = (request.args.get("to") or "").strip()
+
+    def _ok_date(value):
+        try:
+            return datetime.strptime(value, "%Y-%m-%d").date() \
+                .isoformat() == value
+        except ValueError:
+            return False
+
+    if not _ok_date(d_from) or not _ok_date(d_to) or d_from > d_to:
+        return jsonify({"error": "bad_range"}), 400
+    lang = request.args.get("lang") or user.get("lang") or "my"
+    if lang not in EXPORT_STRINGS:
+        lang = "my"
+    s = EXPORT_STRINGS[lang]
+
+    rows = db.q(
+        "SELECT t.*, a.name AS wallet_name FROM transactions t "
+        "LEFT JOIN accounts a ON a.id = t.account_id "
+        "WHERE t.user_id = ? AND t.txn_date >= ? AND t.txn_date <= ? "
+        "ORDER BY t.txn_date, t.id", (user["id"], d_from, d_to))
+
+    months = {}
+    order = []
+    for r in rows:
+        prefix = (r["txn_date"] or "")[:7]
+        if prefix not in months:
+            months[prefix] = []
+            order.append(prefix)
+        months[prefix].append(r)
+
+    def sums(rs):
+        inc = sum(int(r["amount"]) for r in rs if r["kind"] == "income")
+        exp = sum(int(r["amount"]) for r in rs if r["kind"] == "expense")
+        return inc, exp, inc - exp
+
+    g_inc, g_exp, g_left = sums(rows)
+
+    num_fmt = "#,##0"
+    hdr_fill = PatternFill("solid", fgColor="16A34A")
+    hdr_font = Font(bold=True, color="FFFFFF")
+    sub_fill = PatternFill("solid", fgColor="E4F0E7")
+    title_font = Font(bold=True, size=14)
+    bold = Font(bold=True)
+    exp_font = Font(color="D92D20")
+    top_border = Border(top=Side(style="thin"))
+    title = "Ngwe Chay Yar — " + s["report_title"]
+    period = "%s: %s    %s: %s" % (s["from_label"], d_from,
+                                   s["to_label"], d_to)
+
+    def header_row(ws, row, labels):
+        for col, label in enumerate(labels, start=1):
+            cell = ws.cell(row=row, column=col, value=label)
+            cell.fill = hdr_fill
+            cell.font = hdr_font
+
+    def money(cell, value):
+        cell.value = int(value)
+        cell.number_format = num_fmt
+
+    wb = Workbook()
+
+    # ---- Sheet 1: Summary -------------------------------------------------
+    ws = wb.active
+    ws.title = s["sheet_summary"]
+    ws["A1"] = title
+    ws["A1"].font = title_font
+    ws["A2"] = period
+    header_row(ws, 4, [s["month"], s["income"], s["expenses"],
+                       s["leftover"]])
+    r = 5
+    for prefix in order:
+        inc, exp, left = sums(months[prefix])
+        ws.cell(row=r, column=1, value=_export_month_label(prefix, lang))
+        money(ws.cell(row=r, column=2), inc)
+        money(ws.cell(row=r, column=3), exp)
+        money(ws.cell(row=r, column=4), left)
+        r += 1
+    ws.cell(row=r, column=1, value=s["total"]).font = bold
+    for col, val in ((2, g_inc), (3, g_exp), (4, g_left)):
+        cell = ws.cell(row=r, column=col)
+        money(cell, val)
+        cell.font = bold
+        cell.border = top_border
+    ws.cell(row=r, column=1).border = top_border
+    ws.column_dimensions["A"].width = 24
+    for col in "BCD":
+        ws.column_dimensions[col].width = 18
+
+    # ---- Sheet 2: Details ---------------------------------------------------
+    ws2 = wb.create_sheet(s["sheet_details"])
+    ws2["A1"] = title
+    ws2["A1"].font = title_font
+    ws2["A2"] = period
+    r = 4
+    for prefix in order:
+        label = ws2.cell(row=r, column=1,
+                         value=_export_month_label(prefix, lang))
+        label.font = bold
+        for col in range(1, 7):
+            ws2.cell(row=r, column=col).fill = sub_fill
+        ws2.merge_cells(start_row=r, start_column=1, end_row=r,
+                        end_column=6)
+        r += 1
+        header_row(ws2, r, [s["date"], s["type"], s["category"],
+                            s["wallet"], s["note"], s["amount"]])
+        r += 1
+        for trow in months[prefix]:
+            ws2.cell(row=r, column=1, value=trow["txn_date"])
+            ws2.cell(row=r, column=2,
+                     value=s["type_income"] if trow["kind"] == "income"
+                     else s["type_expense"])
+            cat_key = _EXPORT_CAT_KEY.get(trow["category"])
+            ws2.cell(row=r, column=3,
+                     value=s.get(cat_key, trow["category"]) if cat_key
+                     else (trow["category"] or ""))
+            ws2.cell(row=r, column=4, value=trow.get("wallet_name") or "")
+            ws2.cell(row=r, column=5, value=trow.get("note") or "")
+            amount = int(trow["amount"])
+            cell = ws2.cell(row=r, column=6)
+            money(cell, amount if trow["kind"] == "income" else -amount)
+            if trow["kind"] == "expense":
+                cell.font = exp_font
+            r += 1
+        inc, exp, left = sums(months[prefix])
+        for label_key, val in ((s["income_total"], inc),
+                               (s["expenses_total"], exp),
+                               (s["leftover"], left)):
+            ws2.merge_cells(start_row=r, start_column=1, end_row=r,
+                            end_column=5)
+            lab = ws2.cell(row=r, column=1, value=label_key)
+            lab.font = bold
+            cell = ws2.cell(row=r, column=6)
+            money(cell, val)
+            cell.font = bold
+            r += 1
+        r += 1  # blank separator row between months
+    # grand-total block — must equal the Summary sheet's Total row
+    lab = ws2.cell(row=r, column=1, value=s["total"])
+    lab.font = bold
+    lab.border = top_border
+    ws2.cell(row=r, column=6).border = top_border
+    r += 1
+    for label_key, val in ((s["income_total"], g_inc),
+                           (s["expenses_total"], g_exp),
+                           (s["leftover"], g_left)):
+        ws2.merge_cells(start_row=r, start_column=1, end_row=r,
+                        end_column=5)
+        lab = ws2.cell(row=r, column=1, value=label_key)
+        lab.font = bold
+        cell = ws2.cell(row=r, column=6)
+        money(cell, val)
+        cell.font = bold
+        r += 1
+    for col, width in (("A", 14), ("B", 16), ("C", 20), ("D", 18),
+                       ("E", 34), ("F", 16)):
+        ws2.column_dimensions[col].width = width
+
+    buf = BytesIO()
+    wb.save(buf)
+    buf.seek(0)
+    return send_file(
+        buf,
+        mimetype="application/vnd.openxmlformats-officedocument."
+                 "spreadsheetml.sheet",
+        as_attachment=True,
+        download_name="ngwe-chay-yar-%s_%s.xlsx" % (d_from, d_to),
+    )
 
 
 @app.route("/api/accounts", methods=["POST"])

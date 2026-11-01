@@ -32,6 +32,7 @@ import urllib.error
 import urllib.parse
 import urllib.request
 import uuid
+from datetime import date, datetime, timedelta
 from http.cookiejar import CookieJar
 
 APP_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
@@ -409,6 +410,31 @@ def main():
           and "def admin_user_password" in admin_src
           and "session_version=session_version+1" in admin_src
           and "email_or_username" in admin_src)
+    check("static: txn edit + 48h lock + Excel export surface is wired "
+          "(PUT route, shared validator, locked 403s, created_at "
+          "backfill, export endpoint, openpyxl dependency)",
+          "def api_update_transaction" in app_src
+          and "def _validate_txn" in app_src
+          and 'jsonify({"error": "locked"}), 403' in app_src
+          and "def _txn_locked" in app_src
+          and "def api_export_xlsx" in app_src
+          and "EXPORT_STRINGS" in app_src
+          and "txn_date || 'T00:00:00'" in db_src
+          and "openpyxl" in open(os.path.join(
+              APP_DIR, "requirements.txt"), encoding="utf-8").read())
+    export_keys = ("edit_transaction", "txn_locked_note", "txn_locked_err",
+                   "updated", "export_label", "export_title",
+                   "export_from", "export_to", "export_btn",
+                   "export_range_err")
+    check("static: edit/export i18n keys present in all 4 languages",
+          all(all(k in s for k in export_keys)
+              for s in key_sets.values()))
+    check("static: SPA edit mode + lock UI + export dialog wired",
+          "function editTxn(" in spa and "function openAddNew()" in spa
+          and "addState.editId" in spa
+          and "'/api/transactions/'+editId" in spa
+          and 'id="export-form"' in spa and "function doExport(" in spa
+          and "function toggleExport(" in spa and "r.locked" in spa)
 
     # ---- boot --------------------------------------------------------------
     env = dict(os.environ)
@@ -919,6 +945,247 @@ def main():
                      "/admin/messages", "/admin/support", "/admin/settings"):
             st, _, _ = a.get(path)
             check(f"smoke GET {path} -> 200", st == 200, f"st={st}")
+
+        # ---- 14. transaction EDIT + 48-hour lock -------------------------
+        e = Session()
+        register(e, "Eve Edit", "eve@test.local", "eve-pass-1")
+        f = Session()
+        register(f, "Frank Other", "frank@test.local", "frank-pass-1")
+        st, r = e.post_json("/api/accounts", {
+            "name": "Eve Wallet 1", "type": "cash", "brand": "",
+            "balance": 100000, "note": ""})
+        ew1 = r.get("id")
+        st, r = e.post_json("/api/accounts", {
+            "name": "Eve Wallet 2", "type": "cash", "brand": "",
+            "balance": 50000, "note": ""})
+        ew2 = r.get("id")
+        st, r = e.post_json("/api/transactions", {
+            "kind": "expense", "amount": 100, "category": "Food",
+            "txn_date": TODAY, "note": "no wallet"})
+        check("edit48: create without a wallet (wallets exist) -> "
+              "400 wallet_required",
+              st == 400 and r.get("error") == "wallet_required",
+              f"st={st} r={r}")
+        st, r = e.post_json("/api/transactions", {
+            "kind": "expense", "amount": 10000, "category": "Food",
+            "txn_date": TODAY, "note": "Lunch", "account_id": ew1})
+        t1 = r.get("id")
+        check("edit48: Eve creates expense 10,000 on Wallet 1",
+              st == 200 and bool(t1), f"st={st}")
+        st, se = e.api("/api/state")
+        accs = {x["id"]: x for x in se["accounts"]}
+        check("edit48: Wallet 1 = 90,000 after the expense",
+              accs[ew1]["balance"] == 90000, str(accs[ew1]))
+        row1 = next(x for x in se["transactions"] if x["id"] == t1)
+        created_before = row1.get("created_at")
+        check("edit48: fresh txn exposes created_at and locked=false",
+              bool(created_before) and row1.get("locked") is False,
+              str(row1))
+        st, r = e.put_json(f"/api/transactions/{t1}", {
+            "kind": "expense", "amount": 15000, "category": "Transport",
+            "txn_date": TODAY, "note": "Taxi", "account_id": ew2})
+        check("edit48: PUT edit accepted inside the window",
+              st == 200, f"st={st} {r}")
+        st, se = e.api("/api/state")
+        accs = {x["id"]: x for x in se["accounts"]}
+        row1 = next(x for x in se["transactions"] if x["id"] == t1)
+        check("edit48: edit reflects everywhere — W1 restored to "
+              "100,000, W2 = 35,000",
+              accs[ew1]["balance"] == 100000
+              and accs[ew2]["balance"] == 35000,
+              str({k: v["balance"] for k, v in accs.items()}))
+        check("edit48: edited fields stored (15,000 / Transport / Taxi "
+              "/ Wallet 2)",
+              row1["amount"] == 15000 and row1["category"] == "Transport"
+              and row1["note"] == "Taxi" and row1["account_id"] == ew2,
+              str(row1))
+        check("edit48: editing does NOT change created_at",
+              row1.get("created_at") == created_before,
+              f"{row1.get('created_at')} vs {created_before}")
+        inc, exp, left, net = totals(se)
+        check("edit48: month expense follows the edit (15,000)",
+              exp == 15000, str(exp))
+        st, r = e.put_json(f"/api/transactions/{t1}", {
+            "kind": "expense", "amount": 0, "category": "Food",
+            "txn_date": TODAY, "note": "", "account_id": ew2})
+        check("edit48: PUT amount 0 -> 400", st == 400, f"st={st}")
+        st, r = e.put_json(f"/api/transactions/{t1}", {
+            "kind": "expense", "amount": 100, "category": "Food",
+            "txn_date": TODAY, "note": "", "account_id": None})
+        check("edit48: PUT with no wallet (wallets exist) -> 400",
+              st == 400, f"st={st}")
+        st, r = f.put_json(f"/api/transactions/{t1}", {
+            "kind": "expense", "amount": 1, "category": "Food",
+            "txn_date": TODAY, "note": "", "account_id": None})
+        check("edit48: Frank PUT Eve's txn -> 404", st == 404, f"st={st}")
+        st, _, _ = f.delete(f"/api/transactions/{t1}")
+        check("edit48: Frank DELETE Eve's txn -> 404", st == 404,
+              f"st={st}")
+        # age the record past 48h directly in the DB -> locked everywhere
+        con = sqlite3.connect(DB_PATH)
+        old_ts = (datetime.now() - timedelta(hours=49)) \
+            .isoformat(timespec="seconds")
+        con.execute("UPDATE transactions SET created_at = ? WHERE id = ?",
+                    (old_ts, t1))
+        con.commit()
+        con.close()
+        st, se = e.api("/api/state")
+        row1 = next(x for x in se["transactions"] if x["id"] == t1)
+        check("edit48: backdated txn reports locked=true",
+              row1.get("locked") is True, str(row1))
+        st, r = e.put_json(f"/api/transactions/{t1}", {
+            "kind": "expense", "amount": 15000, "category": "Transport",
+            "txn_date": TODAY, "note": "Taxi", "account_id": ew2})
+        check("edit48: PUT after 48h -> 403 locked",
+              st == 403 and r.get("error") == "locked", f"st={st} {r}")
+        st, body, _ = e.delete(f"/api/transactions/{t1}")
+        try:
+            rj = json.loads(body)
+        except Exception:
+            rj = {}
+        check("edit48: DELETE after 48h -> 403 locked",
+              st == 403 and rj.get("error") == "locked", f"st={st}")
+        st, se = e.api("/api/state")
+        check("edit48: locked txn survives the delete attempt",
+              any(x["id"] == t1 for x in se["transactions"]))
+        st, r = e.post_json("/api/transactions", {
+            "kind": "income", "amount": 5000, "category": "Salary",
+            "txn_date": TODAY, "note": "temp", "account_id": ew1})
+        t2 = r.get("id")
+        st, _, _ = e.delete(f"/api/transactions/{t2}")
+        check("edit48: DELETE inside the window still works",
+              st == 200, f"st={st}")
+        st, se = e.api("/api/state")
+        check("edit48: in-window deleted txn is gone",
+              not any(x["id"] == t2 for x in se["transactions"]))
+
+        # ---- 15. Excel export ---------------------------------------------
+        from openpyxl import load_workbook
+
+        g = Session()
+        register(g, "Gina Export", "gina@test.local", "gina-pass-1")
+        st, r = g.post_json("/api/accounts", {
+            "name": "Gina Wallet", "type": "cash", "brand": "",
+            "balance": 0, "note": ""})
+        gw = r.get("id")
+        today_d = date.fromisoformat(TODAY)
+        prev_first = (today_d.replace(day=1) - timedelta(days=1)) \
+            .replace(day=1)
+        prev_mid = (prev_first + timedelta(days=14)).isoformat()
+        prev_p = prev_first.strftime("%Y-%m")
+        old_d = (today_d - timedelta(days=75)).isoformat()
+        from_s = prev_first.isoformat()
+        for payload in (
+                {"kind": "income", "amount": 400000, "category": "Business",
+                 "txn_date": prev_mid, "note": "Shop sales",
+                 "account_id": gw},
+                {"kind": "expense", "amount": 60000, "category": "Transport",
+                 "txn_date": prev_mid, "note": "Delivery",
+                 "account_id": gw},
+                {"kind": "income", "amount": 1000000, "category": "Salary",
+                 "txn_date": TODAY, "note": "Pay", "account_id": gw},
+                {"kind": "expense", "amount": 250000, "category": "Food",
+                 "txn_date": TODAY, "note": "Market", "account_id": gw},
+                {"kind": "expense", "amount": 999999, "category": "Other",
+                 "txn_date": old_d, "note": "Ancient", "account_id": gw}):
+            g.post_json("/api/transactions", payload)
+
+        st, _, _ = anon.get(
+            f"/api/export.xlsx?from={from_s}&to={TODAY}")
+        check("export: signed-out download -> 401", st == 401, f"st={st}")
+        st, _, _ = g.get(f"/api/export.xlsx?from={TODAY}&to={from_s}")
+        check("export: from after to -> 400", st == 400, f"st={st}")
+        st, _, _ = g.get("/api/export.xlsx?from=2026-13-01&to=" + TODAY)
+        check("export: malformed date -> 400", st == 400, f"st={st}")
+
+        st, body, hd = g.get(
+            f"/api/export.xlsx?from={from_s}&to={TODAY}&lang=en")
+        check("export: download 200 with .xlsx filename + MIME",
+              st == 200
+              and f"ngwe-chay-yar-{from_s}_{TODAY}.xlsx"
+              in (hd.get("Content-Disposition") or "")
+              and "spreadsheetml" in (hd.get("Content-Type") or ""),
+              f"st={st} cd={hd.get('Content-Disposition')}")
+        wb = load_workbook(io.BytesIO(body))
+        check("export: EN sheet names are Summary/Details",
+              wb.sheetnames == ["Summary", "Details"], str(wb.sheetnames))
+        summ = [[c.value for c in row]
+                for row in wb["Summary"].iter_rows()]
+        sum_by_label = {r[0]: r for r in summ if r and r[0]}
+        en_months = ["January", "February", "March", "April", "May",
+                     "June", "July", "August", "September", "October",
+                     "November", "December"]
+        prev_label = f"{en_months[prev_first.month - 1]} {prev_first.year}"
+        cur_label = f"{en_months[today_d.month - 1]} {today_d.year}"
+        check("export: Summary prev-month row = 400,000/60,000/340,000",
+              sum_by_label.get(prev_label, [])[1:4]
+              == [400000, 60000, 340000], str(sum_by_label.get(prev_label)))
+        check("export: Summary current-month row = "
+              "1,000,000/250,000/750,000",
+              sum_by_label.get(cur_label, [])[1:4]
+              == [1000000, 250000, 750000], str(sum_by_label.get(cur_label)))
+        check("export: Summary Total row = 1,400,000/310,000/1,090,000",
+              sum_by_label.get("Total", [])[1:4]
+              == [1400000, 310000, 1090000], str(sum_by_label.get("Total")))
+        # workbook figures must equal the API figures for the same range
+        st, sg = g.api("/api/state")
+        api_months = {}
+        for trow in sg["transactions"]:
+            if from_s <= trow["txn_date"] <= TODAY:
+                slot = api_months.setdefault(trow["txn_date"][:7], [0, 0])
+                slot[0 if trow["kind"] == "income" else 1] += \
+                    trow["amount"]
+        api_pairs = sorted(
+            (v[0], v[1], v[0] - v[1]) for v in api_months.values())
+        sheet_pairs = sorted(
+            tuple(r[1:4]) for lbl, r in sum_by_label.items()
+            if lbl in (prev_label, cur_label))
+        check("export: Summary month figures equal /api/state figures",
+              sheet_pairs == api_pairs,
+              f"sheet={sheet_pairs} api={api_pairs}")
+        det = list(wb["Details"].iter_rows())
+        det_vals = [[c.value for c in row] for row in det]
+        check("export: out-of-range txn (999,999, 75 days ago) is absent "
+              "from Details",
+              all(999999 not in r and -999999 not in r for r in det_vals))
+        food_cell = next(
+            (c for row in det for c in row
+             if c.value == -250000), None)
+        check("export: expense amount is negative AND red in Details",
+              food_cell is not None
+              and str(getattr(food_cell.font.color, "rgb", "") or "")
+              .upper().endswith("D92D20"),
+              f"cell={food_cell}")
+        check("export: income amount positive in Details (1,000,000)",
+              any(1000000 in r for r in det_vals))
+        inc_totals = [r[5] for r in det_vals
+                      if r and r[0] == "Income total"]
+        exp_totals = [r[5] for r in det_vals
+                      if r and r[0] == "Expenses total"]
+        check("export: Details subtotals per month + grand total block "
+              "(income 400,000/1,000,000/1,400,000; expenses "
+              "60,000/250,000/310,000)",
+              inc_totals == [400000, 1000000, 1400000]
+              and exp_totals == [60000, 250000, 310000],
+              f"inc={inc_totals} exp={exp_totals}")
+        # Myanmar workbook (stored lang is my by default; also explicit)
+        st, body, _ = g.get(
+            f"/api/export.xlsx?from={from_s}&to={TODAY}&lang=my")
+        wb_my = load_workbook(io.BytesIO(body))
+        my_flat = [c.value for ws in wb_my.worksheets
+                   for row in ws.iter_rows() for c in row if c.value]
+        my_months = ["ဇန်နဝါရီ", "ဖေဖော်ဝါရီ", "မတ်", "ဧပြီ", "မေ",
+                     "ဇွန်", "ဇူလိုင်", "ဩဂုတ်", "စက်တင်ဘာ",
+                     "အောက်တိုဘာ", "နိုဝင်ဘာ", "ဒီဇင်ဘာ"]
+        cur_my = f"{my_months[today_d.month - 1]} {today_d.year}"
+        check("export: MY workbook uses Myanmar sheet names, headers "
+              "and month names",
+              wb_my.sheetnames[0] == "အကျဉ်းချုပ်"
+              and "ဝင်ငွေ" in my_flat and "အသုံးစရိတ်" in my_flat
+              and cur_my in my_flat,
+              f"sheets={wb_my.sheetnames}")
+        check("export: EN workbook uses English month names",
+              cur_label in [r[0] for r in summ if r and r[0]])
     finally:
         proc.terminate()
         try:
@@ -953,6 +1220,17 @@ def audit_phase():
         " txn_date TEXT NOT NULL DEFAULT '',"
         " note TEXT NOT NULL DEFAULT '',"
         " created_at TEXT NOT NULL DEFAULT '')")
+    # legacy rows with EMPTY created_at (written before it was recorded):
+    # the boot migration must backfill them from txn_date at start of day
+    old40 = (date.fromisoformat(TODAY) - timedelta(days=40)).isoformat()
+    con.execute(
+        "INSERT INTO transactions (user_id, kind, amount, category, "
+        "txn_date, note, created_at) VALUES (999, 'expense', 12345, "
+        "'Food', ?, 'legacy old', '')", (old40,))
+    con.execute(
+        "INSERT INTO transactions (user_id, kind, amount, category, "
+        "txn_date, note, created_at) VALUES (999, 'income', 54321, "
+        "'Salary', ?, 'legacy recent', '')", (TODAY,))
     con.commit()
     con.close()
 
@@ -978,9 +1256,20 @@ def audit_phase():
         con = sqlite3.connect(old_db)
         cols = [r[1] for r in
                 con.execute("PRAGMA table_info(transactions)")]
-        con.close()
         check("audit: migration adds account_id to the old table",
               "account_id" in cols, str(cols))
+        bf = {r[0]: r[1] for r in con.execute(
+            "SELECT note, created_at FROM transactions "
+            "WHERE user_id = 999")}
+        con.execute("DELETE FROM transactions WHERE user_id = 999")
+        con.commit()
+        con.close()
+        check("audit: backfill sets a legacy row's created_at to the "
+              "start of its txn_date (40 days ago -> already locked)",
+              bf.get("legacy old") == old40 + "T00:00:00", str(bf))
+        check("audit: backfill sets today's legacy row to start of "
+              "today (keeps the rest of its 48h window)",
+              bf.get("legacy recent") == TODAY + "T00:00:00", str(bf))
 
         adm = Session(AUDIT_BASE)
         register(adm, "Audit Admin", "admin2@test.local", "admin2-pass")
