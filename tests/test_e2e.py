@@ -219,6 +219,7 @@ def main():
     admin_src = open(os.path.join(APP_DIR, "admin_routes.py"),
                      encoding="utf-8").read()
     app_src = open(os.path.join(APP_DIR, "app.py"), encoding="utf-8").read()
+    db_src = open(os.path.join(APP_DIR, "db.py"), encoding="utf-8").read()
     check("static: separate admin gate + account PUT + txn account_id",
           "admin_ok" in admin_src and "def admin_logout" in admin_src
           and "def _admin_session_user" in admin_src
@@ -319,32 +320,74 @@ def main():
           and ".about-col{max-width:720px" in spa
           and "#page-debts .card" in spa)
 
-    # ---- static SPA structure: UI14 Add no-scroll fit + admin doorway ----
+    # ---- static SPA structure: UI15 Add sheet redesign + admin doorway --
     add_i = spa.find('id="page-add"')
     add_j = spa.find('id="page-support"', add_i)
     add_sec = spa[add_i:add_j] if 0 < add_i < add_j else ""
-    check("static: Add page is a height-bounded flex column (mobile dvh + "
-          "desktop vh) with the submit inside the fitted column",
-          "#page-add.active{display:flex;flex-direction:column;"
-          "height:calc(100dvh - 166px)}" in spa
-          and "#page-add.active{display:flex;flex-direction:column;"
-          "height:calc(100vh - 220px)" in spa
+    ui15_i = spa.find("UI15 Add screen")
+    ui15 = spa[ui15_i:] if ui15_i > 0 else ""
+    check("static: Add view is a fixed sheet between header and bottom "
+          "nav; the form area is the only scrollable part and the keypad "
+          "+ submit block is pinned (flex:none) at the sheet bottom",
+          "#page-add.active{position:fixed;top:76px;bottom:88px" in spa
           and ".addcard{flex:1;min-height:0;display:flex;"
           "flex-direction:column" in spa
+          and ".addcard .add-left{display:flex;flex-direction:column;"
+          "flex:1 1 auto;min-height:0;overflow-y:auto" in spa
+          and ".addcard .add-right{display:block;flex:none}" in spa
           and 'id="keypad"' in add_sec and 'id="add-save"' in add_sec
           and 'class="walletwrap"' in add_sec)
-    check("static: Add keypad flexes — rows shrink to fit, keys are "
-          "dvh-clamp sized with a 60px cap (never the old fixed 66px rows)",
-          "grid-template-rows:repeat(4,minmax(0,1fr))" in spa
-          and ".addcard .keypad{flex:1 1 auto;min-height:0" in spa
-          and "height:min(clamp(44px,6.2dvh,60px),100%)" in spa
-          and "max-height:60px;aspect-ratio:1/1" in spa)
-    check("static: Date/Note fields are non-overlapping flex children "
-          "(min-width:0 on fields and on the inputs themselves)",
-          ".daterow{display:flex;gap:10px}" in spa
-          and ".daterow .field{flex:1 1 0;min-width:0;margin:0}" in spa
-          and ".daterow .field.note-f{flex:1.25 1 0}" in spa
-          and ".daterow .field input{min-width:0;max-width:100%}" in spa)
+    check("static: UI15 keypad has real presence — 58px circles/rows "
+          "(52px in the short-viewport tier), 20px numerals, .96 press",
+          "grid-template-rows:repeat(4,58px)" in spa
+          and ".addcard .keypad button{width:58px;height:58px;"
+          "font-size:20px" in spa
+          and "grid-template-rows:repeat(4,52px)" in spa
+          and ".addcard .keypad button:active{transform:scale(.96)}" in spa)
+    check("static: UI15 category tiles are comfortable and never clipped "
+          "(70px floor, height auto — rows grow to fit icon + two "
+          "Myanmar lines at lh 1.9; the UI14 squeeze rules are gone)",
+          ".addcard .catcell{min-height:70px" in spa
+          and ".addcard .catcell{height:" not in spa
+          and "body.lang-my .addcard .catcell span:last-child"
+          "{line-height:1.9}" in spa
+          and "body.lang-th .addcard .catcell span:last-child"
+          "{line-height:1.8}" in spa
+          and ".addcard .catcell{min-height:0" not in ui15
+          and "line-height:1.25" not in ui15
+          and "6.2dvh" not in spa)
+    check("static: UI15 amount block is centred with the caption above "
+          "the 32px amount and a hairline divider under it",
+          ".addcard .amtrow{display:flex;flex-direction:column;"
+          "align-items:center" in spa
+          and ".addcard .amountsub{order:-1" in spa
+          and ".addcard .amountbig{font-size:32px" in spa
+          and "border-bottom:1px solid var(--hair)" in spa)
+    check("static: UI15 wallet is one 44px row (chips side-scroll, hint "
+          "is a single ellipsised line in its own box)",
+          ".addcard .walletwrap{display:flex;align-items:center;gap:10px;"
+          "min-height:44px" in spa
+          and "#add-wallet-hint{flex:1;min-width:0" in spa
+          and "text-overflow:ellipsis" in spa)
+    check("static: UI15 Date/Note — 48px fields, date gets the larger "
+          "flex share, inputs width-capped (no overlap/spill)",
+          ".daterow .field.date-f{flex:1.12 1 0}" in spa
+          and ".daterow .field.note-f{flex:1 1 0}" in spa
+          and ".daterow .field input{width:100%;min-width:0;"
+          "max-width:100%;height:48px" in spa)
+    check("static: UI15 header language pill + bottom-nav labels get "
+          "full Myanmar/Thai line-heights (no glyph shaving)",
+          "body.lang-my .langbtn{line-height:1.9}" in spa
+          and "body.lang-th .langbtn{line-height:1.8}" in spa
+          and "body.lang-my .bn-in>button[data-nav] span"
+          "{line-height:1.9}" in spa
+          and "body.lang-th .bn-in>button[data-nav] span"
+          "{line-height:1.8}" in spa)
+    check("static: UI15 desktop Add is a centred content-height panel "
+          "(880px cap, 60px keys), not a stretched phone form",
+          "#page-add .card{max-width:880px" in spa
+          and "grid-template-rows:repeat(4,60px)" in spa
+          and ".addcard .savebtn{height:52px" in spa)
     check("static: Admin Dashboard doorway rows (Account menu + desktop "
           "sidebar) ship hidden and are revealed only for role=admin; "
           "they are plain links to /admin (separate admin gate untouched)",
@@ -356,6 +399,16 @@ def main():
           and "'ac-admin-row','side-admin-row'" in spa)
     check("static: admin_dashboard i18n key present in all 4 languages",
           all("admin_dashboard" in s for s in key_sets.values()))
+    check("static: username-or-email login + admin credential editing "
+          "surface is wired (identifier lookup helper, session_version "
+          "invalidation, admin username/password POST routes)",
+          "def find_user_by_identifier" in app_src
+          and "email_or_username" in app_src
+          and "session_version" in db_src
+          and "def admin_user_username" in admin_src
+          and "def admin_user_password" in admin_src
+          and "session_version=session_version+1" in admin_src
+          and "email_or_username" in admin_src)
 
     # ---- boot --------------------------------------------------------------
     env = dict(os.environ)
@@ -550,6 +603,56 @@ def main():
         res = json.loads(body)
         check("search excludes self",
               not any(u["username"] == "aliceadmin" for u in res), str(res))
+
+        # ---- 5b. login with username OR email --------------------------------
+        u1 = Session(BASE)
+        u1.post_form("/login", {"email": "bobuser",
+                                "password": "bob-pass-1"})
+        st, _, _ = u1.get("/api/state")
+        check("B logs in with USERNAME instead of email", st == 200,
+              f"st={st}")
+        u2 = Session(BASE)
+        u2.post_form("/login", {"email": "BOBUSER",
+                                "password": "bob-pass-1"})
+        st, _, _ = u2.get("/api/state")
+        check("username login is case-insensitive (BOBUSER)", st == 200,
+              f"st={st}")
+        u3 = Session(BASE)
+        u3.post_form("/login", {"email": "@bobuser",
+                                "password": "bob-pass-1"})
+        st, _, _ = u3.get("/api/state")
+        check("username login tolerates a leading @", st == 200,
+              f"st={st}")
+        u4 = Session(BASE)
+        u4.post_form("/login", {"email": "bob@test.local",
+                                "password": "bob-pass-1"})
+        st, _, _ = u4.get("/api/state")
+        check("email login still works alongside username login",
+              st == 200, f"st={st}")
+        u5 = Session(BASE)
+        u5.post_form("/login", {"email": "nosuchuser",
+                                "password": "bob-pass-1"})
+        st, _, _ = u5.get("/api/state")
+        check("unknown username gets no session", st == 401, f"st={st}")
+        u6 = Session(BASE)
+        u6.post_form("/login", {"email": "bobuser",
+                                "password": "wrong-pass"})
+        st, _, _ = u6.get("/api/state")
+        check("username + wrong password gets no session", st == 401,
+              f"st={st}")
+        g1 = Session(BASE)
+        g1.post_form("/admin/login", {"email": "aliceadmin",
+                                      "password": "alice-pass-1"})
+        st, body, _ = g1.get("/admin/overview")
+        check("admin logs in at /admin/login with USERNAME",
+              st == 200 and len(body) > 1000, f"st={st}")
+        g2 = Session(BASE)
+        g2.post_form("/admin/login", {"email": "bobuser",
+                                      "password": "bob-pass-1"})
+        st, _, hd = g2.get("/admin/overview", follow=False)
+        check("non-admin rejected at /admin/login via USERNAME too",
+              st == 302 and "/admin/login" in (hd.get("Location") or ""),
+              f"st={st}")
 
         # ---- 6. messages ------------------------------------------------------
         st, r = a.post_json("/api/messages",
@@ -1090,6 +1193,225 @@ def audit_phase():
               str(trow))
         check("audit: month expense now 230,000 (unlinked still counts)",
               exp == 230000, str(exp))
+
+        # ---- creds: admin edits usernames + resets passwords --------------
+        # (runs LAST in this phase: the self-reset retires adm's sessions)
+        con = sqlite3.connect(old_db)
+        ids = {r[1]: r[0] for r in con.execute(
+            "SELECT id, email FROM users").fetchall()}
+
+        def uname(uid):
+            row = con.execute("SELECT username FROM users WHERE id=?",
+                              (uid,)).fetchone()
+            return row[0] if row else None
+
+        adm_id = ids["admin2@test.local"]
+        carol_id = ids["carol2@test.local"]
+        dave_id = ids["dave@test.local"]
+        check("audit setup: carol has username carolx, dave has none",
+              uname(carol_id) == "carolx" and uname(dave_id) is None,
+              f"carol={uname(carol_id)} dave={uname(dave_id)}")
+
+        # the admin gate itself accepts the username as identifier
+        st, _, hd = adm.post_form("/admin/login",
+                                  {"email": "adminx",
+                                   "password": "admin2-pass"},
+                                  follow=False)
+        check("audit: admin gate login via USERNAME -> overview",
+              st == 302 and "/admin/overview" in (hd.get("Location") or ""),
+              f"st={st} loc={hd.get('Location')}")
+        st, body, _ = adm.get("/admin/users")
+        body = body.decode("utf-8", "ignore")
+        check("audit: Users page carries the credential editor forms",
+              st == 200 and 'id="mUserForm"' in body
+              and 'id="mPassForm"' in body and "data-id=" in body,
+              f"st={st}")
+
+        # unauthenticated + app-session-only POSTs are refused, nothing moves
+        anon2 = Session(AUDIT_BASE)
+        st, _, hd = anon2.post_form(
+            f"/admin/users/{dave_id}/username", {"username": "davey"},
+            follow=False)
+        check("audit: unauthenticated username-edit POST refused",
+              st == 302 and "/admin/login" in (hd.get("Location") or "")
+              and uname(dave_id) is None, f"st={st}")
+        st, _, hd = carol.post_form(
+            f"/admin/users/{dave_id}/username", {"username": "davey"},
+            follow=False)
+        check("audit: app-session-only username-edit POST refused",
+              st == 302 and "/admin/login" in (hd.get("Location") or "")
+              and uname(dave_id) is None, f"st={st}")
+        st, _, hd = carol.post_form(
+            f"/admin/users/{dave_id}/password",
+            {"password": "hacked-1", "confirm_password": "hacked-1"},
+            follow=False)
+        check("audit: app-session-only password-reset POST refused",
+              st == 302 and "/admin/login" in (hd.get("Location") or ""),
+              f"st={st}")
+
+        # validation: invalid format + duplicates change nothing
+        st, _, hd = adm.post_form(
+            f"/admin/users/{carol_id}/username",
+            {"username": "Bad Name!"}, follow=False)
+        check("audit: invalid-format username edit rejected (u_invalid)",
+              "uerr=u_invalid" in (hd.get("Location") or "")
+              and uname(carol_id) == "carolx",
+              f"loc={hd.get('Location')}")
+        st, _, hd = adm.post_form(
+            f"/admin/users/{dave_id}/username", {"username": "adminx"},
+            follow=False)
+        check("audit: duplicate username edit rejected (u_taken)",
+              "uerr=u_taken" in (hd.get("Location") or "")
+              and uname(dave_id) is None, f"loc={hd.get('Location')}")
+        st, _, hd = adm.post_form(
+            f"/admin/users/{dave_id}/username", {"username": "AdminX"},
+            follow=False)
+        check("audit: case-variant duplicate also rejected",
+              "uerr=u_taken" in (hd.get("Location") or "")
+              and uname(dave_id) is None, f"loc={hd.get('Location')}")
+
+        # set a username for a user who has none -> login + search use it
+        st, _, hd = adm.post_form(
+            f"/admin/users/{dave_id}/username", {"username": "davey"},
+            follow=False)
+        check("audit: admin sets dave's first username (davey)",
+              "ok=cred" in (hd.get("Location") or "")
+              and uname(dave_id) == "davey", f"loc={hd.get('Location')}")
+        dv = Session(AUDIT_BASE)
+        dv.post_form("/login", {"email": "davey", "password": "dave-pass"})
+        st, _ = dv.api("/api/state")
+        check("audit: dave logs in with the admin-set username",
+              st == 200, f"st={st}")
+        st, res = adm.api("/api/users/search?q=davey")
+        check("audit: chat search finds dave by the new username",
+              any(u["username"] == "davey" for u in res), str(res))
+
+        # rename carol -> old name stops resolving everywhere, new works
+        st, _, hd = adm.post_form(
+            f"/admin/users/{carol_id}/username", {"username": "caroly"},
+            follow=False)
+        check("audit: admin renames carolx -> caroly",
+              "ok=cred" in (hd.get("Location") or "")
+              and uname(carol_id) == "caroly", f"loc={hd.get('Location')}")
+        old = Session(AUDIT_BASE)
+        old.post_form("/login", {"email": "carolx",
+                                 "password": "carol-pass"})
+        st, _ = old.api("/api/state")
+        check("audit: login with the OLD username now fails", st == 401,
+              f"st={st}")
+        new = Session(AUDIT_BASE)
+        new.post_form("/login", {"email": "caroly",
+                                 "password": "carol-pass"})
+        st, _ = new.api("/api/state")
+        check("audit: login with the NEW username works", st == 200,
+              f"st={st}")
+        st, res = adm.api("/api/users/search?q=carolx")
+        check("audit: chat search no longer finds the old username",
+              not any(u["username"] == "carolx" for u in res), str(res))
+        st, res = adm.api("/api/users/search?q=caroly")
+        check("audit: chat search finds the new username",
+              any(u["username"] == "caroly" for u in res), str(res))
+        st, _ = adm.post_json("/api/messages",
+                              {"to": "caroly", "text": "hi new name"})
+        check("audit: message addressed to NEW username delivers",
+              st == 200, f"st={st}")
+        st, _ = adm.post_json("/api/messages",
+                              {"to": "carolx", "text": "hi old name"})
+        check("audit: message addressed to OLD username 404s", st == 404,
+              f"st={st}")
+
+        # password reset validation (dave's password must not move)
+        st, _, hd = adm.post_form(
+            f"/admin/users/{dave_id}/password",
+            {"password": "short", "confirm_password": "short"},
+            follow=False)
+        check("audit: too-short reset rejected (p_short)",
+              "perr=p_short" in (hd.get("Location") or ""),
+              f"loc={hd.get('Location')}")
+        st, _, hd = adm.post_form(
+            f"/admin/users/{dave_id}/password",
+            {"password": "dave-new-1", "confirm_password": "dave-new-2"},
+            follow=False)
+        check("audit: mismatched reset rejected (p_mismatch)",
+              "perr=p_mismatch" in (hd.get("Location") or ""),
+              f"loc={hd.get('Location')}")
+
+        # password reset: old dies everywhere, existing session invalidated
+        dv2 = Session(AUDIT_BASE)
+        dv2.post_form("/login", {"email": "dave@test.local",
+                                 "password": "dave-pass"})
+        st, _ = dv2.api("/api/state")
+        check("audit: dave pre-reset session is live", st == 200,
+              f"st={st}")
+        st, _, hd = adm.post_form(
+            f"/admin/users/{dave_id}/password",
+            {"password": "dave-new-1", "confirm_password": "dave-new-1"},
+            follow=False)
+        svrow = con.execute("SELECT session_version FROM users WHERE id=?",
+                            (dave_id,)).fetchone()
+        check("audit: admin resets dave's password (+session_version bump)",
+              "ok=cred" in (hd.get("Location") or "")
+              and svrow and svrow[0] == 1,
+              f"loc={hd.get('Location')} sv={svrow}")
+        st, _ = dv2.api("/api/state")
+        check("audit: dave's EXISTING session is invalidated by the reset",
+              st == 401, f"st={st}")
+        dv3 = Session(AUDIT_BASE)
+        dv3.post_form("/login", {"email": "dave@test.local",
+                                 "password": "dave-pass"})
+        st, _ = dv3.api("/api/state")
+        check("audit: dave OLD password now fails", st == 401, f"st={st}")
+        dv4 = Session(AUDIT_BASE)
+        dv4.post_form("/login", {"email": "davey",
+                                 "password": "dave-new-1"})
+        st, _ = dv4.api("/api/state")
+        check("audit: dave NEW password works (username login too)",
+              st == 200, f"st={st}")
+
+        # admin edits OWN username: no self-lockout (session is by user id)
+        st, _, hd = adm.post_form(
+            f"/admin/users/{adm_id}/username", {"username": "adminx2"},
+            follow=False)
+        check("audit: admin renames OWN username",
+              "ok=cred" in (hd.get("Location") or "")
+              and uname(adm_id) == "adminx2", f"loc={hd.get('Location')}")
+        st, body, _ = adm.get("/admin/overview")
+        check("audit: own admin session survives the username change",
+              st == 200, f"st={st}")
+
+        # admin resets OWN password: both of their sessions retire, and
+        # the new password works at BOTH doors (username identifier too)
+        st, _, hd = adm.post_form(
+            f"/admin/users/{adm_id}/password",
+            {"password": "admin2-new", "confirm_password": "admin2-new"},
+            follow=False)
+        check("audit: admin resets OWN password",
+              "ok=cred" in (hd.get("Location") or ""),
+              f"loc={hd.get('Location')}")
+        st, _, hd = adm.get("/admin/overview", follow=False)
+        check("audit: own ADMIN session retired by self-reset",
+              st == 302 and "/admin/login" in (hd.get("Location") or ""),
+              f"st={st}")
+        st, _ = adm.api("/api/state")
+        check("audit: own APP session retired by self-reset", st == 401,
+              f"st={st}")
+        adm2 = Session(AUDIT_BASE)
+        adm2.post_form("/login", {"email": "admin2@test.local",
+                                  "password": "admin2-pass"})
+        st, _ = adm2.api("/api/state")
+        check("audit: admin OLD password fails at app login", st == 401,
+              f"st={st}")
+        st, _, hd = adm2.post_form("/admin/login",
+                                   {"email": "adminx2",
+                                    "password": "admin2-new"},
+                                   follow=False)
+        check("audit: NEW password + NEW username work at /admin/login",
+              st == 302 and "/admin/overview" in (hd.get("Location") or ""),
+              f"st={st} loc={hd.get('Location')}")
+        st, body, _ = adm2.get("/admin/overview")
+        check("audit: admin back into the dashboard after self-reset",
+              st == 200, f"st={st}")
+        con.close()
     finally:
         proc.terminate()
         try:

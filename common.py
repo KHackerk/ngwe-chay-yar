@@ -18,6 +18,13 @@ def current_user():
 
     A suspended user is treated as logged out for app use — except an
     admin account, which is never locked out by the suspended flag.
+
+    Session invalidation: logins stamp the account's session_version
+    into the session (``sv``). An admin password reset bumps the
+    version, so every previously issued app session for that account
+    stops matching and is treated as signed out here. Sessions issued
+    before the version existed carry no stamp; they adopt the current
+    version once instead of being killed outright.
     """
     uid = session.get("uid")
     if not uid:
@@ -26,6 +33,12 @@ def current_user():
     if not user:
         return None
     if user.get("suspended") and user.get("role") != "admin":
+        return None
+    version = int(user.get("session_version") or 0)
+    stamp = session.get("sv")
+    if stamp is None:
+        session["sv"] = version
+    elif int(stamp) != version:
         return None
     return user
 

@@ -53,6 +53,7 @@ AUTH_STRINGS = {
         "register_sub": "Start tracking your money today",
         "name": "Full Name",
         "email": "Email",
+        "email_or_username": "Email or username",
         "password": "Password",
         "confirm_password": "Confirm Password",
         "terms": "I agree to the Terms & Privacy Policy",
@@ -62,7 +63,7 @@ AUTH_STRINGS = {
         "have_account": "Already have an account?",
         "create_one": "Create one",
         "sign_in": "Sign in",
-        "invalid": "Invalid email or password.",
+        "invalid": "Invalid email, username or password.",
         "suspended": "Your account has been suspended. Please contact support.",
         "email_taken": "An account with this email already exists.",
         "password_mismatch": "Passwords do not match.",
@@ -83,6 +84,7 @@ AUTH_STRINGS = {
         "register_sub": "ဒီနေ့ကစပြီး သင့်ငွေကို စီမံလိုက်ပါ",
         "name": "အမည်အပြည့်အစုံ",
         "email": "အီးမေးလ်",
+        "email_or_username": "အီးမေးလ် သို့မဟုတ် username",
         "password": "စကားဝှက်",
         "confirm_password": "စကားဝှက် အတည်ပြုပါ",
         "terms": "စည်းကမ်းချက်များနှင့် ကိုယ်ရေးမူဝါဒကို သဘောတူပါသည်",
@@ -92,7 +94,7 @@ AUTH_STRINGS = {
         "have_account": "အကောင့် ရှိပြီးသားလား?",
         "create_one": "အသစ်ဖွင့်ရန်",
         "sign_in": "ဝင်ရောက်ရန်",
-        "invalid": "အီးမေးလ် သို့မဟုတ် စကားဝှက် မမှန်ပါ။",
+        "invalid": "အီးမေးလ် / username သို့မဟုတ် စကားဝှက် မမှန်ပါ။",
         "suspended": "သင့်အကောင့်ကို ရပ်ဆိုင်းထားပါသည်။ အကူအညီဌာနကို ဆက်သွယ်ပါ။",
         "email_taken": "ဤအီးမေးလ်ဖြင့် အကောင့် ရှိပြီးသားဖြစ်ပါသည်။",
         "password_mismatch": "စကားဝှက်နှစ်ခု မတူညီပါ။",
@@ -163,15 +165,37 @@ def _maintenance_gate():
 # Auth routes
 # ---------------------------------------------------------------------------
 
+def find_user_by_identifier(identifier):
+    """Look an account up by login identifier: email OR chat username.
+
+    The identifier is normalised exactly the way stored values are:
+    emails are lowercased at registration, usernames can only ever be
+    stored lowercase (the creation rule ^[a-z0-9_]{3,20}$ admits nothing
+    else), so lowercasing the input makes both matches case-insensitive.
+    A single leading "@" is tolerated for the username form, matching
+    how usernames are displayed (@name) across the app. The two spaces
+    are disjoint — a username can never contain "@" or "." — so trying
+    email first, then username, can never match the wrong account.
+    """
+    ident = (identifier or "").strip().lower()
+    if not ident:
+        return None
+    user = db.q1("SELECT * FROM users WHERE email = ?", (ident,))
+    if user:
+        return user
+    uname = ident[1:] if ident.startswith("@") else ident
+    return db.q1("SELECT * FROM users WHERE username = ?", (uname,))
+
+
 @app.route("/login", methods=["GET", "POST"])
 def login():
     s = _strings()
     error = None
     admin_note = request.args.get("admin") == "1"
     if request.method == "POST":
-        email = (request.form.get("email") or "").strip().lower()
+        identifier = request.form.get("email") or ""
         password = request.form.get("password") or ""
-        user = db.q1("SELECT * FROM users WHERE email = ?", (email,))
+        user = find_user_by_identifier(identifier)
         if not user or not check_password_hash(user["password_hash"], password):
             error = s["invalid"]
         elif user.get("suspended") and user.get("role") != "admin":
@@ -179,6 +203,7 @@ def login():
         else:
             session.clear()
             session["uid"] = user["id"]
+            session["sv"] = int(user.get("session_version") or 0)
             nxt = request.args.get("next") or "/"
             if not nxt.startswith("/") or nxt.startswith("//"):
                 nxt = "/"
@@ -232,6 +257,7 @@ def register():
             )
             session.clear()
             session["uid"] = uid
+            session["sv"] = 0  # new rows start at session_version 0
             return _with_lang_cookie(make_response(redirect("/")))
     resp = make_response(
         render_template("register.html", s=s, closed=False, error=error,

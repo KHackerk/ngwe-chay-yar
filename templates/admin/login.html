@@ -55,8 +55,8 @@ button[type=submit]{width:100%;margin-top:22px;border:0;border-radius:999px;padd
   <p class="note"><span class="pill-admin">Admin</span><br>{{ s.admin_login_note }}</p>
   {% if error %}<div class="err">{{ error }}</div>{% endif %}
   <form method="post" action="{{ url_for('admin_login') }}">
-    <label for="email">{{ s.email }}</label>
-    <input id="email" name="email" type="email" required autocomplete="username" placeholder="{{ s.email }}">
+    <label for="email">{{ s.email_or_username }}</label>
+    <input id="email" name="email" type="text" required autocomplete="username" placeholder="{{ s.email_or_username }}">
     <label for="password">{{ s.password }}</label>
     <input id="password" name="password" type="password" required autocomplete="current-password" placeholder="{{ s.password }}">
     <button type="submit">{{ s.sign_in }}</button>

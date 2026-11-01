@@ -12,13 +12,14 @@ API used (see CONTRACT.md):
 SQL uses ``?`` placeholders (db.py converts for Postgres).
 """
 import os
+import re
 import time
 from datetime import date, datetime, timedelta
 from functools import wraps
 
 from flask import (redirect, render_template, request, session, url_for,
                    abort)
-from werkzeug.security import check_password_hash
+from werkzeug.security import check_password_hash, generate_password_hash
 from werkzeug.utils import secure_filename
 
 import db
@@ -113,9 +114,20 @@ ADMIN_STRINGS = {
         # --- extra keys for the real app (login, empty states, misc) ---
         'email': 'Email', 'password': 'Password', 'sign_in': 'Sign in',
         'admin_login_note': 'Admin sign in — only the admin account can open the dashboard.',
-        'login_error_credentials': 'Invalid email or password.',
+        'login_error_credentials': 'Invalid email, username or password.',
         'login_error_not_admin': 'This account is not an admin account.',
         'login_error_suspended': 'This account is suspended.',
+        'email_or_username': 'Email or username',
+        'act_edit_username': 'Edit username',
+        'act_set_password': 'Set new password',
+        'new_password': 'New password',
+        'confirm_password': 'Confirm password',
+        'cancel': 'Cancel',
+        'err_username_invalid': 'Username must be 3–20 characters: lowercase letters, numbers or _ only.',
+        'err_username_taken': 'This username is already taken.',
+        'err_password_short': 'Password must be at least 6 characters.',
+        'err_password_mismatch': 'Passwords do not match.',
+        'cred_updated': 'Sign-in details updated.',
         'logout': 'Log out', 'save': 'Save', 'saved': 'Saved.',
         'col_email': 'Email', 'col_username': 'Username', 'col_role': 'Role',
         'empty_users': 'No users yet. New registrations will appear here.',
@@ -203,9 +215,20 @@ ADMIN_STRINGS = {
         'email': 'အီးမေးလ်', 'password': 'စကားဝှက်',
         'sign_in': 'ဝင်ရောက်ရန်',
         'admin_login_note': 'Admin ဝင်ရောက်ရန် — admin အကောင့်တစ်ခုတည်းသာ dashboard ကို ဖွင့်နိုင်ပါသည်။',
-        'login_error_credentials': 'အီးမေးလ် သို့မဟုတ် စကားဝှက် မမှန်ပါ။',
+        'login_error_credentials': 'အီးမေးလ် / username သို့မဟုတ် စကားဝှက် မမှန်ပါ။',
         'login_error_not_admin': 'ဤအကောင့်သည် admin အကောင့် မဟုတ်ပါ။',
         'login_error_suspended': 'ဤအကောင့်ကို ရပ်ဆိုင်းထားပါသည်။',
+        'email_or_username': 'အီးမေးလ် သို့မဟုတ် username',
+        'act_edit_username': 'Username ပြင်ရန်',
+        'act_set_password': 'စကားဝှက် အသစ် သတ်မှတ်ရန်',
+        'new_password': 'စကားဝှက် အသစ်',
+        'confirm_password': 'စကားဝှက် အတည်ပြုပါ',
+        'cancel': 'မလုပ်တော့ပါ',
+        'err_username_invalid': 'Username သည် စာလုံး ၃–၂၀ လုံး ဖြစ်ရမည် — အင်္ဂလိပ် စာလုံးအသေး၊ ဂဏန်း သို့မဟုတ် _ သာ သုံးပါ။',
+        'err_username_taken': 'ဒီ username ကို ယူပြီးသား ဖြစ်နေပါတယ်။',
+        'err_password_short': 'စကားဝှက်သည် အနည်းဆုံး စာလုံး ၆ လုံး ရှိရပါမည်။',
+        'err_password_mismatch': 'စကားဝှက်နှစ်ခု မတူညီပါ။',
+        'cred_updated': 'ဝင်ရောက်မှု အချက်အလက်များ ပြင်ပြီးပါပြီ။',
         'logout': 'ထွက်ရန်', 'save': 'သိမ်းရန်', 'saved': 'သိမ်းပြီးပါပြီ။',
         'col_email': 'အီးမေးလ်', 'col_username': 'Username',
         'col_role': 'ရာထူး',
@@ -228,6 +251,31 @@ ADMIN_STRINGS = {
 # ---------------------------------------------------------------------------
 # helpers
 # ---------------------------------------------------------------------------
+# Username rule — the SAME pattern the user-side creation endpoint
+# (/api/username in app.py) enforces: 3-20 chars of [a-z0-9_]. That rule
+# admits lowercase only, which is also why stored usernames are always
+# lowercase and a case-insensitive uniqueness check is just an exact
+# check against the stored values once the candidate is normalised.
+# (The user side has no reserved-name list, so none is invented here.)
+USERNAME_RE = re.compile(r"^[a-z0-9_]{3,20}$")
+MIN_PASSWORD_LEN = 6  # the same minimum as registration in app.py
+
+
+def find_user_by_identifier(identifier):
+    """Email OR username lookup for the admin login — same semantics as
+    the app login in app.py (kept in step deliberately; admin_routes is
+    a self-contained module)."""
+    ident = (identifier or '').strip().lower()
+    if not ident:
+        return None
+    user = db.q1("SELECT * FROM users WHERE email=?", (ident,))
+    if user:
+        return user
+    uname = ident[1:] if ident.startswith('@') else ident
+    return db.q1("SELECT * FROM users WHERE username=?", (uname,))
+
+
+
 def _lang():
     lang = request.args.get('lang') or request.cookies.get('admin_lang') or 'my'
     return lang if lang in ADMIN_STRINGS else 'my'
@@ -254,11 +302,13 @@ def _ctx(page, lang, admin, **kw):
 #
 # /admin has its OWN sign-in, independent of the main app session: being
 # signed into the app (even as an admin) does NOT open the dashboard.
-# A successful POST to /admin/login stamps three session keys:
+# A successful POST to /admin/login stamps four session keys:
 #   admin_uid — the admin account's user id (the guard's identity source;
 #               the app session's user is irrelevant and untouched)
 #   admin_ok  — True
 #   admin_at  — epoch seconds of the admin login (12 h lifetime)
+#   admin_sv  — the account's session_version at stamp time; an admin
+#               password reset bumps the version and retires the stamp
 # Every guarded request re-validates that the stamped account still
 # exists, still has role='admin' and is not suspended.
 # ---------------------------------------------------------------------------
@@ -266,12 +316,21 @@ ADMIN_SESSION_TTL = 12 * 3600  # 12 hours
 
 
 def _clear_admin_session():
-    for key in ('admin_uid', 'admin_ok', 'admin_at'):
+    for key in ('admin_uid', 'admin_ok', 'admin_at', 'admin_sv'):
         session.pop(key, None)
 
 
 def _admin_session_user():
-    """Return the admin-session user row, or None when the gate is shut."""
+    """Return the admin-session user row, or None when the gate is shut.
+
+    The admin login also stamps the account's session_version
+    (``admin_sv``): an admin password reset bumps that version, which
+    retires every previously issued admin session for the account —
+    including the acting admin's own session when they reset their own
+    password (they simply sign in again with the new password). Admin
+    sessions issued before the stamp existed adopt the current version
+    once instead of being killed outright.
+    """
     if not session.get('admin_ok'):
         return None
     try:
@@ -286,6 +345,12 @@ def _admin_session_user():
         return None
     user = db.q1("SELECT * FROM users WHERE id=?", (uid,))
     if not user or user.get('role') != 'admin' or user.get('suspended'):
+        return None
+    version = int(user.get('session_version') or 0)
+    stamp = session.get('admin_sv')
+    if stamp is None:
+        session['admin_sv'] = version
+    elif int(stamp) != version:
         return None
     return user
 
@@ -369,9 +434,9 @@ def register(app):
         if err_code == 'not_admin':
             error = s['login_error_not_admin']
         if request.method == 'POST':
-            email = (request.form.get('email') or '').strip().lower()
+            identifier = request.form.get('email') or ''
             password = request.form.get('password') or ''
-            row = db.q1("SELECT * FROM users WHERE email=?", (email,))
+            row = find_user_by_identifier(identifier)
             if not row or not check_password_hash(
                     row.get('password_hash') or '', password):
                 error = s['login_error_credentials']
@@ -385,6 +450,7 @@ def register(app):
                 session['admin_uid'] = row['id']
                 session['admin_ok'] = True
                 session['admin_at'] = int(time.time())
+                session['admin_sv'] = int(row.get('session_version') or 0)
                 nxt = request.args.get('next') or ''
                 if nxt.startswith('/admin'):
                     return redirect(nxt)
@@ -519,8 +585,86 @@ def register(app):
                 "SELECT u.*, (SELECT COUNT(*) FROM transactions"
                 " WHERE user_id=u.id) AS txn_count, " + net_expr +
                 " AS net_worth FROM users u ORDER BY u.id DESC")
+        # Credential-edit feedback (set by the username/password POSTs
+        # below): cred_uid reopens that user's editor with the message.
+        cred_err = request.args.get('uerr') or request.args.get('perr') \
+            or ''
         return render_template('admin/users.html', **_ctx(
-            'users', lang, admin, users=users, q=q))
+            'users', lang, admin, users=users, q=q,
+            cred_uid=request.args.get('uid', type=int),
+            cred_err=cred_err,
+            cred_ok=request.args.get('ok') == 'cred'))
+
+    @app.route('/admin/users/<int:user_id>/username', methods=['POST'])
+    @admin_guard
+    def admin_user_username(admin, user_id):
+        """Set a user's chat username from the admin dashboard.
+
+        Validation is the user-side rule (USERNAME_RE, the pattern
+        /api/username enforces) plus case-insensitive uniqueness across
+        all users. The candidate is lowercased first — the stored form
+        the rule itself would produce — so a case-variant of somebody
+        else's username is a conflict, never a second account key.
+        Setting a username for a user who has none is allowed; blanking
+        is not (the user side has no "clear username" operation either).
+        Chat addressing keys off the users row (messages/support store
+        ids, search reads the live username), so the new value takes
+        effect everywhere at once and the old one stops resolving.
+        """
+        target = db.q1("SELECT * FROM users WHERE id=?", (user_id,))
+        if not target:
+            abort(404)
+        q = request.form.get('q') or ''
+        username = (request.form.get('username') or '').strip().lower()
+        err = ''
+        if not USERNAME_RE.match(username):
+            err = 'u_invalid'
+        else:
+            taken = db.q1("SELECT id FROM users WHERE username=?",
+                          (username,))
+            if taken and taken['id'] != user_id:
+                err = 'u_taken'
+        if err:
+            return redirect(url_for('admin_users', q=q, uid=user_id,
+                                    uerr=err))
+        if username != (target.get('username') or ''):
+            db.execute("UPDATE users SET username=? WHERE id=?",
+                       (username, user_id))
+        return redirect(url_for('admin_users', q=q, ok='cred'))
+
+    @app.route('/admin/users/<int:user_id>/password', methods=['POST'])
+    @admin_guard
+    def admin_user_password(admin, user_id):
+        """Set a new password for a user (hash only, via the same
+        werkzeug helper registration uses; same 6-char minimum).
+
+        The reset also bumps users.session_version, which retires the
+        target's existing app sessions (common.current_user) and admin
+        sessions (_admin_session_user) — the old password stops working
+        everywhere at once. Works for any account including the acting
+        admin's own (their admin session is keyed by user id, so a
+        username edit can never lock them out; a self password reset
+        logs their sessions out and they sign in with the new one).
+        """
+        target = db.q1("SELECT * FROM users WHERE id=?", (user_id,))
+        if not target:
+            abort(404)
+        q = request.form.get('q') or ''
+        password = request.form.get('password') or ''
+        confirm = request.form.get('confirm_password') or ''
+        err = ''
+        if len(password) < MIN_PASSWORD_LEN:
+            err = 'p_short'
+        elif password != confirm:
+            err = 'p_mismatch'
+        if err:
+            return redirect(url_for('admin_users', q=q, uid=user_id,
+                                    perr=err))
+        db.execute(
+            "UPDATE users SET password_hash=?, "
+            "session_version=session_version+1 WHERE id=?",
+            (generate_password_hash(password), user_id))
+        return redirect(url_for('admin_users', q=q, ok='cred'))
 
     @app.route('/admin/users/<int:user_id>/suspend', methods=['POST'])
     @admin_guard

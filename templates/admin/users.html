@@ -1,5 +1,6 @@
 {% extends "admin/base.html" %}
 {% block content %}
+{% if cred_ok %}<div class="notice" style="margin-bottom:14px">{{ s.cred_updated }}</div>{% endif %}
 <div class="card">
   <h3>{{ s.nav_users }}</h3>
   <p class="sub">{{ s.users_sub }}</p>
@@ -25,6 +26,7 @@
         <td>{% if u.suspended %}<span class="pill off">{{ s.status_suspended }}</span>{% else %}<span class="pill on">{{ s.status_active }}</span>{% endif %}</td>
         <td style="white-space:nowrap">
           <button type="button" class="abtn" data-view
+            data-id="{{ u.id }}"
             data-name="{{ u.name }}" data-email="{{ u.email }}"
             data-username="{{ u.username or '' }}" data-role="{{ u.role }}"
             data-joined="{{ (u.created_at or '')[:10] }}"
@@ -63,6 +65,32 @@
     <div class="kv"><span class="k">{{ s.col_txns }}</span><span class="v num" id="mTxns"></span></div>
     <div class="kv"><span class="k">{{ s.col_networth }}</span><span class="v num" id="mNet"></span></div>
     <div class="kv"><span class="k">{{ s.col_status }}</span><span class="v" id="mStatus"></span></div>
+
+    <form method="post" id="mUserForm" style="margin-top:18px;border-top:1px solid var(--hair);padding-top:14px">
+      <div style="font-weight:700;font-size:14px;margin-bottom:8px">{{ s.act_edit_username }}</div>
+      {% if cred_err == 'u_invalid' %}<div class="red-t" style="font-size:13px;margin-bottom:8px">{{ s.err_username_invalid }}</div>{% endif %}
+      {% if cred_err == 'u_taken' %}<div class="red-t" style="font-size:13px;margin-bottom:8px">{{ s.err_username_taken }}</div>{% endif %}
+      <div style="display:flex;gap:8px;align-items:center">
+        <span class="muted" style="font-weight:700">@</span>
+        <input type="text" name="username" id="mUsernameIn" autocomplete="off" spellcheck="false"
+               style="flex:1;min-width:0;background:var(--field-bg);border:1px solid var(--field-brd);border-radius:999px;padding:9px 15px;font-size:14px;color:var(--ink);outline:none">
+        <input type="hidden" name="q" value="{{ q }}">
+        <button class="abtn" type="submit" style="padding:9px 16px">{{ s.save }}</button>
+      </div>
+    </form>
+
+    <form method="post" id="mPassForm" style="margin-top:16px;border-top:1px solid var(--hair);padding-top:14px">
+      <div style="font-weight:700;font-size:14px;margin-bottom:8px">{{ s.act_set_password }}</div>
+      {% if cred_err == 'p_short' %}<div class="red-t" style="font-size:13px;margin-bottom:8px">{{ s.err_password_short }}</div>{% endif %}
+      {% if cred_err == 'p_mismatch' %}<div class="red-t" style="font-size:13px;margin-bottom:8px">{{ s.err_password_mismatch }}</div>{% endif %}
+      <input type="password" name="password" autocomplete="new-password" placeholder="{{ s.new_password }}"
+             style="width:100%;background:var(--field-bg);border:1px solid var(--field-brd);border-radius:999px;padding:9px 15px;font-size:14px;color:var(--ink);outline:none;margin-bottom:8px">
+      <input type="password" name="confirm_password" autocomplete="new-password" placeholder="{{ s.confirm_password }}"
+             style="width:100%;background:var(--field-bg);border:1px solid var(--field-brd);border-radius:999px;padding:9px 15px;font-size:14px;color:var(--ink);outline:none">
+      <input type="hidden" name="q" value="{{ q }}">
+      <button class="abtn" type="submit" style="margin-top:10px;width:100%;padding:10px">{{ s.save }}</button>
+    </form>
+
     <button class="abtn" id="mClose" style="margin-top:16px;width:100%;padding:10px">{{ s.close }}</button>
   </div>
 </div>
@@ -82,10 +110,21 @@ document.querySelectorAll('[data-view]').forEach(function(b){
     document.getElementById('mTxns').textContent=b.dataset.txns;
     document.getElementById('mNet').textContent=b.dataset.net;
     document.getElementById('mStatus').textContent=b.dataset.status;
+    document.getElementById('mUsernameIn').value=b.dataset.username||'';
+    document.getElementById('mUserForm').action='/admin/users/'+b.dataset.id+'/username';
+    document.getElementById('mPassForm').action='/admin/users/'+b.dataset.id+'/password';
     document.getElementById('userModal').classList.add('open');
   });
 });
 document.getElementById('mClose').addEventListener('click',function(){document.getElementById('userModal').classList.remove('open');});
 document.getElementById('userModal').addEventListener('click',function(e){if(e.target===this)this.classList.remove('open');});
+{% if cred_uid %}
+/* A credential edit just failed for this user — reopen their editor so
+   the error above the form is visible in context. */
+(function(){
+  var b=document.querySelector('[data-view][data-id="{{ cred_uid }}"]');
+  if(b) b.click();
+})();
+{% endif %}
 </script>
 {% endblock %}

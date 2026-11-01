@@ -151,6 +151,7 @@ _SQLITE_DDL = [
         username TEXT UNIQUE,
         photo TEXT,
         suspended INTEGER NOT NULL DEFAULT 0,
+        session_version INTEGER NOT NULL DEFAULT 0,
         lang TEXT NOT NULL DEFAULT 'my',
         theme TEXT NOT NULL DEFAULT 'light',
         created_at TEXT NOT NULL DEFAULT ''
@@ -248,6 +249,7 @@ _PG_DDL = [
         username TEXT UNIQUE,
         photo TEXT,
         suspended INTEGER NOT NULL DEFAULT 0,
+        session_version INTEGER NOT NULL DEFAULT 0,
         lang TEXT NOT NULL DEFAULT 'my',
         theme TEXT NOT NULL DEFAULT 'light',
         created_at TEXT NOT NULL DEFAULT ''
@@ -341,6 +343,18 @@ _DEFAULT_SETTINGS = {
 }
 
 
+def _add_column(conn, is_pg, table, column, ddl):
+    """ALTER TABLE ... ADD COLUMN, idempotent on both backends."""
+    if is_pg:
+        conn.execute(
+            f"ALTER TABLE {table} ADD COLUMN IF NOT EXISTS {column} {ddl}")
+    else:
+        cols = [r[1] for r in
+                conn.execute(f"PRAGMA table_info({table})").fetchall()]
+        if column not in cols:
+            conn.execute(f"ALTER TABLE {table} ADD COLUMN {column} {ddl}")
+
+
 def _migrate(conn, is_pg):
     """Idempotent migrations for databases created by older builds.
 
@@ -348,17 +362,14 @@ def _migrate(conn, is_pg):
     no REFERENCES clause, because the transactions DDL runs before the
     accounts table exists and Postgres requires referenced tables to
     pre-exist. Wallet ownership is enforced in the API layer instead.
+
+    users.session_version backs session invalidation on admin password
+    reset: every login stamps the version into the session cookie, and
+    current_user()/the admin gate reject a session whose stamp is stale.
     """
-    if is_pg:
-        conn.execute(
-            "ALTER TABLE transactions "
-            "ADD COLUMN IF NOT EXISTS account_id INTEGER")
-    else:
-        cols = [r[1] for r in
-                conn.execute("PRAGMA table_info(transactions)").fetchall()]
-        if "account_id" not in cols:
-            conn.execute(
-                "ALTER TABLE transactions ADD COLUMN account_id INTEGER")
+    _add_column(conn, is_pg, "transactions", "account_id", "INTEGER")
+    _add_column(conn, is_pg, "users", "session_version",
+                "INTEGER NOT NULL DEFAULT 0")
     conn.commit()
 
 

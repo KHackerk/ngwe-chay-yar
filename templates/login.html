@@ -84,9 +84,9 @@
     {% if error %}<div class="error">{{ error }}</div>{% endif %}
     <form method="post" action="/login{% if request.args.get('next') %}?next={{ request.args.get('next') }}{% endif %}">
       <div class="field">
-        <label for="email">{{ s.email }}</label>
-        <input id="email" type="email" name="email" required autocomplete="email"
-               value="{{ request.form.get('email', '') }}" placeholder="you@example.com">
+        <label for="email">{{ s.email_or_username }}</label>
+        <input id="email" type="text" name="email" required autocomplete="username"
+               value="{{ request.form.get('email', '') }}" placeholder="you@example.com / username">
       </div>
       <div class="field">
         <label for="password">{{ s.password }}</label>

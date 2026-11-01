@@ -798,79 +798,111 @@ html[data-theme="dark"] .sup-dot{border-color:#0A100C}
 .sup-shield svg{width:20px;height:20px}
 .daydiv{display:flex;justify-content:center;margin:2px 0 10px}
 .daydiv span{font-size:11px;color:var(--muted);background:var(--glass-lo);border:1px solid var(--hair2);padding:3px 11px;border-radius:999px}
-/* ============ UI14 Add screen: no-scroll fit (bounded flex column, flexing keypad), de-cramp, Date/Note overlap fix ============ */
-/* Date + Note: proper flex children at every width — the native date input
-   can overflow its field, so the input itself is width-capped too. */
-.daterow{display:flex;gap:10px}
-.daterow .field{flex:1 1 0;min-width:0;margin:0}
-.daterow .field.note-f{flex:1.25 1 0}
-.daterow .field input{min-width:0;max-width:100%}
-.addcard .walletwrap{margin-top:10px}
-#add-wallet-hint{font-size:12px;line-height:1.55;margin:4px 0 0}
+/* ============ UI15 Add screen: calm premium sheet (replaces the UI14 squeeze) ============
+   Design rules, in priority order:
+   1. NOTHING is ever clipped — text containers get comfortable FIXED sizes
+      and full language line-heights (Myanmar 1.9 / Thai 1.8); containers
+      and whitespace absorb size pressure, never glyphs.
+   2. The add view is a sheet pinned between the sticky header and the
+      bottom nav (position:fixed), so its height never depends on
+      document flow: the page itself cannot scroll, the page title always
+      sits fully below the header, and the keypad + submit are ALWAYS
+      visible at the bottom of the sheet (.add-right is flex:none).
+   3. Only when the viewport is too short for the full stack does the
+      FORM area (.add-left) scroll internally — keypad and submit stay
+      pinned. Key circles: 58px (52px under 740px viewport height). */
+/* ---- shared (all widths) ---- */
+.addcard .amtrow{display:flex;flex-direction:column;align-items:center;justify-content:flex-start;gap:0;margin-top:10px;padding-bottom:10px;border-bottom:1px solid var(--hair)}
+.addcard .amountsub{order:-1;margin:0 0 2px}
+.addcard .amountbig{font-size:32px;line-height:1.15;margin:0}
+.addcard .toggle{padding:3px}
+.addcard .toggle button{padding:7px 0}
+body.lang-my .addcard .toggle button{line-height:1.9}
+body.lang-th .addcard .toggle button{line-height:1.8}
+.addcat-lbl{margin:12px 0 6px}
+.addcard .catgrid{gap:8px;margin-top:0}
+.addcard .catcell{min-height:70px;padding:6px 4px;gap:4px;border-radius:16px;font-size:12px;justify-content:center}
+.addcard .catcell .chip-ico{width:30px;height:30px}
+.addcard .catcell .chip-ico svg{width:19px;height:19px}
+.addcard .catcell span:last-child{line-height:1.75}
+body.lang-my .addcard .catcell span:last-child{line-height:1.9}
+body.lang-th .addcard .catcell span:last-child{line-height:1.8}
+/* Wallet: ONE clean 44px row — label, then picker chips (side-scroll if
+   many) or the no-wallet hint as a single ellipsised line in its own box. */
+.addcard .walletwrap{display:flex;align-items:center;gap:10px;min-height:44px;margin-top:8px}
+.addcard .walletwrap .lbl{flex:none;margin:0}
+.addcard .watchips{display:flex;flex-wrap:nowrap;gap:8px;flex:1;min-width:0;overflow-x:auto;margin:0;scrollbar-width:none}
+.addcard .watchips::-webkit-scrollbar{display:none}
+.addcard .wachip{flex:none}
+#add-wallet-hint{flex:1;min-width:0;font-size:12px;line-height:1.9;margin:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+/* Date / Note: 48px fields, labels above. The DATE field gets the larger
+   share — a date control's UA internals (value + calendar indicator) have
+   a large intrinsic minimum width, and the old 1:1.25 split starved it
+   (~147px), so the control painted past its box over the note field.
+   Now the date box is ~167px at 390px wide with slim padding, the input
+   itself is width-capped, and note text ellipsises inside its own box. */
+.addcard .daterow{display:flex;gap:10px;margin-top:10px}
+.daterow .field{margin:0;min-width:0}
+.daterow .field.date-f{flex:1.12 1 0}
+.daterow .field.note-f{flex:1 1 0}
+.daterow .field label{margin-bottom:5px}
+.daterow .field input{width:100%;min-width:0;max-width:100%;height:48px;padding:0 12px;font-size:14.5px;border-radius:12px}
+.daterow .field.date-f input{padding-right:8px}
+.addcard .keypad{display:grid;grid-template-columns:repeat(3,1fr);grid-template-rows:repeat(4,58px);column-gap:12px;row-gap:12px;width:100%;max-width:320px;margin:10px auto 0;justify-items:center;align-items:center}
+.addcard .keypad button{width:58px;height:58px;font-size:20px;font-weight:500}
+.addcard .keypad button:active{transform:scale(.96)}
+.addcard .savebtn{height:52px;padding:0;margin-top:10px;display:flex;align-items:center;justify-content:center}
+body.lang-my .addcard .savebtn{line-height:1.9}
+body.lang-th .addcard .savebtn{line-height:1.8}
+/* Collateral: Myanmar/Thai glyphs in the header language pill and the
+   bottom-nav labels get their full line-height so ascenders/descenders
+   are never shaved by the pill edges (app-wide, CSS only). */
+body.lang-my .langbtn{line-height:1.9}
+body.lang-th .langbtn{line-height:1.8}
+body.lang-my .bn-in>button[data-nav] span{line-height:1.9}
+body.lang-th .bn-in>button[data-nav] span{line-height:1.8}
+
 @media (max-width:1023px){
-  body.on-add .center{padding-bottom:12px}
-  #page-add.active{display:flex;flex-direction:column;height:calc(100dvh - 166px)}
-  #page-add .sechead{flex:none;margin:4px 2px 6px}
-  #page-add .sechead h2{font-size:15px}
-  .addcard{flex:1;min-height:0;display:flex;flex-direction:column;padding:12px 14px;margin-bottom:0}
-  .addcard .toggle,.addcard .amtrow,.addcat-lbl,.addcard .catgrid,.addcard .walletwrap,.addcard .daterow,.addcard .savebtn{flex:none}
-  .addcard .toggle button{padding:6px 0}
-  .addcard .amtrow{margin-top:8px}
-  .addcard .amountbig{font-size:25px;margin:0}
-  .addcat-lbl{margin:8px 0 4px}
-  .addcard .catgrid{gap:6px;margin-top:0}
-  .addcard .catcell{padding:4px 2px 3px;gap:3px;border-radius:12px;font-size:10.5px}
-  .addcard .catcell .chip-ico{width:21px;height:21px}
-  .addcard .catcell .chip-ico svg{width:13px;height:13px}
-  .addcard .walletwrap{margin-top:8px}
-  .addcard .daterow{margin-top:8px}
-  .daterow .field label{font-size:10px;margin-bottom:3px}
-  .daterow .field input{padding:7px 10px;font-size:13.5px;border-radius:10px}
-  .addcard .keypad{flex:1 1 auto;min-height:0;display:grid;grid-template-columns:repeat(3,1fr);grid-template-rows:repeat(4,minmax(0,1fr));column-gap:8px;row-gap:6px;width:100%;max-width:340px;margin:10px auto 0;justify-items:center;align-items:center}
-  .addcard .keypad button{width:auto;height:min(clamp(44px,6.2dvh,60px),100%);max-height:60px;aspect-ratio:1/1;padding:0}
-  .addcard .savebtn{margin-top:10px;padding:11px 0}
-  @media (max-height:840px){
-    .addcard{padding:10px 12px}
-    .addcard .amtrow{margin-top:6px}
-    .addcard .amountbig{font-size:23px}
-    .addcard .catcell .chip-ico{width:19px;height:19px}
-    .addcard .walletwrap{margin-top:7px}
-    .addcard .daterow{margin-top:7px}
-    .addcard .keypad{margin-top:8px}
+  /* The sheet: fixed between the sticky header (ends ~76px from the top)
+     and the bottom nav (top edge ~88px from the bottom). Header and nav
+     keep their higher z-indexes and stay fully usable. */
+  #page-add.active{position:fixed;top:76px;bottom:88px;left:0;right:0;width:min(480px,100%);margin:0 auto;padding:0 16px;z-index:55;display:flex;flex-direction:column}
+  #page-add .sechead{flex:none;margin:0 2px 6px}
+  #page-add .sechead h2{font-size:15.5px}
+  .addcard{flex:1;min-height:0;display:flex;flex-direction:column;padding:14px 16px 12px;margin-bottom:0}
+  .addcard .add-left{display:flex;flex-direction:column;flex:1 1 auto;min-height:0;overflow-y:auto;overscroll-behavior:contain;scrollbar-width:none}
+  .addcard .add-left::-webkit-scrollbar{display:none}
+  .addcard .add-right{display:block;flex:none}
+  /* flash() reports (e.g. "please enter an amount") must not hide
+     behind the sheet while adding */
+  body.on-add #flash{position:fixed;top:84px;left:0;right:0;width:min(448px,calc(100% - 32px));margin:0 auto;z-index:95}
+  @media (max-height:740px){
+    .addcard{padding:12px 14px 10px}
+    .addcard .amtrow{margin-top:8px}
+    .addcat-lbl{margin:10px 0 5px}
+    .addcard .walletwrap{margin-top:6px}
+    .addcard .daterow{margin-top:8px}
+    .addcard .keypad{grid-template-rows:repeat(4,52px);column-gap:10px;row-gap:10px;margin-top:8px}
+    .addcard .keypad button{width:52px;height:52px}
     .addcard .savebtn{margin-top:8px}
   }
-  @media (max-height:780px){
-    #page-add .sechead{margin:2px 2px 4px}
-    #page-add .sechead h2{font-size:14px}
-    .addcat-lbl{display:none}
-    .addcard .catgrid{gap:5px}
-    .addcard .catcell{padding:3px 2px 2px}
-    .addcard .catcell .chip-ico{width:18px;height:18px}
-    .addcard .keypad{row-gap:5px}
-  }
-  @media (max-height:700px){
-    #page-add .sechead{display:none}
-    .addcard .toggle button{padding:5px 0}
-    .addcard .walletwrap .lbl{display:none}
-    .daterow .field input{padding:6px 9px}
+  @media (max-height:500px){
+    /* very short (landscape) viewports: the sheet takes the full height;
+       the form area scrolls, keypad + submit stay pinned */
+    #page-add.active{top:8px;bottom:8px}
   }
 }
 @media (min-width:1024px){
-  #page-add.active{display:flex;flex-direction:column;height:calc(100vh - 220px);min-height:440px}
-  #page-add .sechead{flex:none}
-  .addcard{flex:1;min-height:0;align-items:stretch}
-  .add-left{justify-content:center;min-height:0}
-  .add-right{justify-content:center;min-height:0}
-  .addcard .amountbig{font-size:28px}
-  .addcard .daterow{margin-top:12px}
-  .addcard .keypad{flex:1 1 auto;min-height:0;max-height:320px;width:100%;display:grid;grid-template-columns:repeat(3,1fr);grid-template-rows:repeat(4,minmax(0,1fr));column-gap:8px;row-gap:6px;justify-items:center;align-items:center}
-  .addcard .keypad button{width:auto;height:min(clamp(44px,6.2dvh,60px),100%);max-height:60px;aspect-ratio:1/1;padding:0}
-  .add-right .savebtn{flex:none}
-  @media (max-height:820px){
-    #page-add .sechead{margin:10px 2px 6px}
-    .addcard .catcell{padding:6px 2px 5px}
-    .addcard .amountbig{font-size:26px}
-  }
+  /* Desktop: a designed, centred panel — content-height, two columns,
+     no stretched phone form and no fixed-height empty areas. */
+  #page-add.active{display:block}
+  #page-add .card{max-width:880px;margin-left:auto;margin-right:auto}
+  .addcard{display:grid;grid-template-columns:minmax(0,1fr) 320px;column-gap:36px;padding:26px 30px;align-items:stretch}
+  .addcard .add-left{display:flex;flex-direction:column;justify-content:center;min-width:0}
+  .addcard .add-right{display:flex;flex-direction:column;align-items:center;justify-content:center;min-width:0}
+  .addcard .keypad{grid-template-rows:repeat(4,60px);max-width:300px;margin-top:0}
+  .addcard .keypad button{width:60px;height:60px}
+  .addcard .savebtn{width:100%;margin-top:14px}
 }
 </style>
 </head>
