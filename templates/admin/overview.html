@@ -1,0 +1,47 @@
+{% extends "admin/base.html" %}
+{% block content %}
+<div class="stats">
+  <div class="stat"><div class="lbl">{{ s.stat_total_users }}</div><div class="sv num">{{ "{:,}".format(total_users) }}</div></div>
+  <div class="stat"><div class="lbl">{{ s.stat_active_today }}</div><div class="sv num">{{ "{:,}".format(active_today) }}</div></div>
+  <div class="stat"><div class="lbl">{{ s.stat_txn_month }}</div><div class="sv num">{{ "{:,}".format(txn_month) }}</div></div>
+  <div class="stat"><div class="lbl">{{ s.stat_new_users }}</div><div class="sv num">{{ "{:,}".format(new_users) }}</div></div>
+</div>
+<div class="card">
+  <h3>{{ s.flow_title }}</h3>
+  <p class="sub">{{ s.flow_sub }}</p>
+  <div class="flowrow"><span class="fl">{{ s.flow_income }}</span><div class="bar"><i style="width:{{ flow_pct.income }}%"></i></div><span class="fv num green-t">{{ "{:,}".format(income) }}</span></div>
+  <div class="flowrow"><span class="fl">{{ s.flow_expenses }}</span><div class="bar"><i class="exp" style="width:{{ flow_pct.expense }}%"></i></div><span class="fv num red-t">{{ "{:,}".format(expense) }}</span></div>
+  <div class="flowrow"><span class="fl">{{ s.flow_leftover }}</span><div class="bar"><i style="width:{{ flow_pct.leftover }}%"></i></div><span class="fv num">{{ "{:,}".format(leftover) }}</span></div>
+</div>
+<div class="card">
+  <h3>{{ s.chart_title }}</h3>
+  <p class="sub">{{ s.chart_sub }}</p>
+  <div class="chart">
+    {% for v in volume %}
+    <div class="col"><span class="cv num">{{ "{:,}".format(v.count) }}</span><i style="height:{{ v.pct }}%"></i><span class="cm">{{ v.label }}</span></div>
+    {% endfor %}
+  </div>
+</div>
+<div class="grid2">
+  <div class="card"><h3>{{ s.newest_users }}</h3>
+    {% if newest %}
+      {% for u in newest %}
+      <div class="urow"><span class="avatar">{{ initials(u.name) }}</span>
+        <div><div class="un">{{ u.name }}</div><div class="uu">{% if u.username %}@{{ u.username }}{% else %}{{ u.email }}{% endif %}</div></div>
+        <div class="ur"><div class="uu">{{ (u.created_at or '')[:10] }}</div></div>
+      </div>
+      {% endfor %}
+    {% else %}<p class="empty">{{ s.empty_users }}</p>{% endif %}
+  </div>
+  <div class="card"><h3>{{ s.recent_txn }}</h3>
+    {% if recent %}
+      {% for t in recent %}
+      <div class="trow"><span class="avatar">{{ initials(t.user_name) }}</span>
+        <div><div style="font-weight:600;font-size:14px">{{ t.user_name }}</div><div class="tc">{{ t.category }} · {{ t.txn_date }}</div></div>
+        <span class="ta num {{ 'green-t' if t.kind=='income' else 'red-t' }}">{{ '+' if t.kind=='income' else '−' }}{{ "{:,}".format(t.amount) }}</span>
+      </div>
+      {% endfor %}
+    {% else %}<p class="empty">{{ s.empty_txn }}</p>{% endif %}
+  </div>
+</div>
+{% endblock %}

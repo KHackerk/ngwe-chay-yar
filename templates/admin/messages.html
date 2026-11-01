@@ -1,0 +1,21 @@
+{% extends "admin/base.html" %}
+{% block content %}
+<div class="stats3">
+  <div class="stat"><div class="lbl">{{ s.msg_conv }}</div><div class="sv num">{{ "{:,}".format(conv_count) }}</div></div>
+  <div class="stat"><div class="lbl">{{ s.msg_today }}</div><div class="sv num">{{ "{:,}".format(msg_today) }}</div></div>
+  <div class="stat"><div class="lbl">{{ s.msg_attach }}</div><div class="sv num">{{ "{:,}".format(with_attach) }}</div></div>
+</div>
+<div class="card">
+  <h3>{{ s.msg_recent }}</h3>
+  <p class="sub">{{ s.msg_overview_note }}</p>
+  {% if convs %}
+    {% for c in convs %}
+    <div class="convrow"><span class="avatar">{{ initials(c.a_name) }}</span>
+      <div style="min-width:0"><div class="cn">{{ c.a_name }} &#8596; {{ c.b_name }}</div>
+      <div class="cs">{{ c.preview }}</div></div>
+      <span class="ct">{{ c.time }}</span>
+    </div>
+    {% endfor %}
+  {% else %}<p class="empty">{{ s.empty_convs }}</p>{% endif %}
+</div>
+{% endblock %}

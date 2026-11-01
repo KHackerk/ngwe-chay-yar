@@ -1,0 +1,2180 @@
+<!DOCTYPE html>
+<html lang="my-MM" style="color-scheme: light">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="color-scheme" content="light dark">
+<title>Ngwe Chay Yar</title>
+<meta name="theme-color" content="#F4F7F4">
+<link rel="icon" href="/static/img/logo-256.png">
+<style>
+/* ============ Ngwe Chay Yar — UI3 Glass design system ============ */
+:root{
+  --ink:#101410; --ink2:#2A332A; --muted:#5F6B5F;
+  --green:#16A34A; --green-b:#22C55E; --green-xl:#4ADE80; --mint:#DCFCE7; --mint2:#BBF7D0;
+  --deep:#14532D; --deep2:#0B3D24; --exp-red:#D92D20;
+  --hair:rgba(16,20,16,.07); --hair2:rgba(16,20,16,.05);
+  --glass:rgba(255,255,255,.58);
+  --glass-brd:rgba(255,255,255,.75);
+  --shadow:0 12px 40px rgba(11,61,36,.10);
+  --shadow-sm:0 4px 18px rgba(11,61,36,.07);
+  --r:20px;
+  --bg:var(--bg); --glass-hi:rgba(255,255,255,.62); --glass-lo:rgba(255,255,255,.48); --glass-menu:var(--glass-menu);
+  --field-bg:var(--field-bg); --field-brd:var(--field-brd); --keybg:var(--keybg); --keybrd:var(--keybrd);
+  --mint-glass:var(--mint-glass); --gridline:rgba(16,20,16,.05); --track:var(--track);
+  --font:-apple-system,BlinkMacSystemFont,"Inter","Segoe UI",Roboto,"Noto Sans Myanmar","Pyidaungsu",sans-serif;
+  --myfont:"Noto Sans Myanmar","Pyidaungsu",-apple-system,"Segoe UI",Roboto,sans-serif;
+}
+html{color-scheme:light}
+html[data-theme="light"]{color-scheme:light}
+*{box-sizing:border-box}
+html{-webkit-text-size-adjust:100%}
+body{margin:0;font-family:var(--font);color:var(--ink);background:var(--bg);font-size:15px;line-height:1.55;-webkit-font-smoothing:antialiased}
+/* living background orbs (fixed, blurred) */
+.orb{position:fixed;border-radius:50%;filter:blur(90px);pointer-events:none;z-index:0}
+.orb.o1{width:520px;height:520px;background:rgba(20,83,45,.20);top:-180px;right:-120px}
+.orb.o2{width:460px;height:460px;background:rgba(34,197,94,.16);bottom:-160px;left:-140px}
+.orb.o3{width:380px;height:380px;background:rgba(95,107,95,.14);top:38%;left:44%}
+button{font-family:inherit;cursor:pointer;color:inherit}
+input,select,textarea{font-family:inherit}
+img{display:block}
+.num,.sv,.wv,.ta,.big,.amt,.dv,b,strong{font-variant-numeric:tabular-nums}
+/* Myanmar text rules */
+.my{font-family:var(--myfont);letter-spacing:0!important;text-transform:none!important;line-height:1.9;overflow-wrap:normal;white-space:normal}
+.my-sub{display:block;font-family:var(--myfont);font-size:12.5px;color:var(--muted);letter-spacing:0!important;text-transform:none!important;line-height:1.9;margin-top:2px}
+/* labels: English-only small caps */
+.lbl,.sl{font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);font-weight:600}
+.muted{color:var(--muted)}
+.green-t{color:var(--green)}
+
+/* ============ layout ============ */
+.layout{position:relative;z-index:1}
+.center{max-width:480px;margin:0 auto;padding:14px 16px 128px}
+.sidebar,.rightpanel{display:none}
+
+/* ============ floating glass top bar (mobile) ============ */
+.mobiletop{position:sticky;top:12px;z-index:60;display:flex;align-items:center;justify-content:space-between;gap:12px;
+  background:var(--glass-hi);-webkit-backdrop-filter:blur(20px) saturate(160%);backdrop-filter:blur(20px) saturate(160%);
+  border:1px solid var(--glass-brd);box-shadow:var(--shadow-sm),inset 0 0 0 1px var(--hair2);border-radius:18px;padding:10px 12px}
+.brandrow{display:flex;align-items:center;gap:11px;min-width:0}
+.logo-tile{flex:none;width:42px;height:42px;border-radius:12px;background:#111111;display:flex;align-items:center;justify-content:center;overflow:hidden;box-shadow:inset 0 0 0 1px rgba(255,255,255,.14)}
+.logo-tile img{width:100%;height:100%;object-fit:cover}
+.logo-tile.lg{width:54px;height:54px;border-radius:14px}
+.brandname{font-weight:650;font-size:16px;letter-spacing:-.02em;line-height:1.2;white-space:nowrap}
+.brandsub{font-size:10px;letter-spacing:.16em;text-transform:uppercase;color:var(--green);font-weight:700}
+.iconbtns{display:flex;gap:8px}
+.icobtn{width:38px;height:38px;border-radius:50%;border:1px solid var(--hair);background:var(--field-bg);display:flex;align-items:center;justify-content:center;color:var(--ink2);transition:transform .2s,box-shadow .2s}
+.icobtn svg{width:19px;height:19px}
+.icobtn:active{transform:scale(.96)}
+
+/* ============ desktop head ============ */
+.deskhead{display:none}
+
+/* ============ flash ============ */
+
+
+
+
+.flash{display:none;margin-top:12px;background:rgba(9,14,10,.92);color:#fff;border-radius:14px;padding:11px 16px;font-size:13.5px;line-height:1.8;letter-spacing:0;box-shadow:var(--shadow)}
+  #bootload{position:fixed;inset:0;z-index:300;display:flex;align-items:center;justify-content:center;background:#F4F7F4}
+  html[data-theme="dark"] #bootload{background:#07130C}
+  .pavatar{position:relative;overflow:hidden}
+  .pavatar img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;display:block}
+
+/* ============ pages ============ */
+.page{display:none}
+.page.active{display:block;animation:fadeUp .35s ease both}
+@keyframes fadeUp{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
+@media (prefers-reduced-motion:reduce){.page.active{animation:none}*{transition:none!important}}
+
+/* ============ glass card ============ */
+.card{background:var(--glass);-webkit-backdrop-filter:blur(20px) saturate(160%);backdrop-filter:blur(20px) saturate(160%);
+  border:1px solid var(--glass-brd);box-shadow:var(--shadow),inset 0 0 0 1px var(--hair2);border-radius:var(--r);padding:18px;margin-bottom:14px}
+.listcard{background:var(--glass);-webkit-backdrop-filter:blur(20px) saturate(160%);backdrop-filter:blur(20px) saturate(160%);
+  border:1px solid var(--glass-brd);box-shadow:var(--shadow),inset 0 0 0 1px var(--hair2);border-radius:var(--r);padding:4px 16px;margin-bottom:14px}
+.sechead{margin:22px 2px 10px}
+.sechead h2{display:inline;font-size:17px;font-weight:650;letter-spacing:-.015em}
+.rowbet{display:flex;align-items:center;justify-content:space-between;gap:10px}
+.linkbtn{background:none;border:none;color:var(--green);font-size:13px;font-weight:600;padding:4px 2px}
+
+/* ============ home ============ */
+.dateline{margin:18px 2px 4px;font-size:13px;color:var(--muted)}
+.dateline b{color:var(--ink2);font-weight:600}
+.spendwrap{text-align:center;padding:10px 0 18px}
+.spendwrap .amt{font-size:34px;font-weight:700;letter-spacing:-.02em;line-height:1.15;margin-top:6px}
+.spendwrap .vs{font-size:13px;color:var(--muted);margin-top:5px}
+.spendwrap .vs b{color:var(--ink2)}
+.hero{background:linear-gradient(135deg,rgba(9,14,10,.92),rgba(11,61,36,.88));-webkit-backdrop-filter:blur(20px) saturate(160%);backdrop-filter:blur(20px) saturate(160%);
+  border:1px solid rgba(255,255,255,.14);box-shadow:0 18px 44px rgba(9,14,10,.22);border-radius:var(--r);padding:20px;color:#fff;margin-bottom:14px}
+.hero .lbl{color:var(--field-bg)}
+.hero .big{font-size:31px;font-weight:700;letter-spacing:-.02em;margin:6px 0 4px}
+.hero-grid{display:grid;grid-template-columns:1fr 1fr;margin-top:10px}
+.hero-grid>div{padding:12px 0 2px}
+.hero-grid>div:nth-child(1){padding-right:14px;border-right:1px solid rgba(255,255,255,.12)}
+.hero-grid>div:nth-child(2){padding-left:14px}
+.hero-grid>div:nth-child(3){grid-column:1/-1;border-top:1px solid rgba(255,255,255,.12);margin-top:8px}
+.hero-grid span{display:block;font-size:11.5px;color:var(--field-bg);margin-bottom:2px}
+.hero-grid b{font-size:14.5px;font-weight:650;color:#fff}
+.hero-grid b.neg{color:#fff}
+.statgrid{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:4px}
+.stat{background:var(--glass);-webkit-backdrop-filter:blur(20px) saturate(160%);backdrop-filter:blur(20px) saturate(160%);
+  border:1px solid var(--glass-brd);box-shadow:var(--shadow-sm),inset 0 0 0 1px var(--hair2);border-radius:var(--r);padding:15px 16px}
+.stat .sv{font-size:18.5px;font-weight:650;letter-spacing:-.01em;margin-top:5px}
+.stat .sv.g{color:var(--green)}
+
+/* icon chip + hairline rows */
+.chip-ico{flex:none;width:36px;height:36px;border-radius:50%;background:rgba(34,197,94,.10);color:var(--deep);display:flex;align-items:center;justify-content:center}
+.chip-ico svg{width:19px;height:19px}
+.chip-ico.dk{background:#111111;color:var(--green-xl)}
+.txn,.wrow,.mgrrow,.toprow{display:flex;align-items:center;gap:12px;padding:12px 0;border-bottom:1px solid var(--hair)}
+.txn:last-child,.wrow:last-child,.mgrrow:last-child,.toprow:last-child{border-bottom:none}
+.tm{flex:1;min-width:0}
+.tn{font-size:14px;font-weight:550;display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.td{font-size:12px;color:var(--muted);margin-top:1px}
+.ta{font-size:14px;font-weight:600;white-space:nowrap}
+.ta.income{color:var(--green)}
+.ta.expense{color:var(--exp-red)}
+.wv{font-size:14.5px;font-weight:650;white-space:nowrap}
+.wrow.total .tn{font-weight:650}
+.mgrrow b{font-size:14px}
+.mgrrow .tm b{font-size:14px;font-weight:600}
+.mgrrow small{color:var(--muted);font-size:12px;font-weight:400}
+.delbtn{flex:none;width:27px;height:27px;border-radius:50%;border:1px solid var(--hair);background:var(--keybg);color:var(--muted);display:flex;align-items:center;justify-content:center;padding:0}
+.delbtn svg{width:12px;height:12px}
+.delbtn:active{transform:scale(.94)}
+
+/* top spending bars */
+.pbar{height:5px;background:rgba(16,20,16,.06);border-radius:999px;overflow:hidden;margin-top:6px}
+.pbar i{display:block;height:100%;border-radius:999px;background:linear-gradient(90deg,var(--green-b),var(--green))}
+
+/* donut */
+.donutwrap{position:relative;width:190px;height:190px;margin:6px auto 4px}
+.donutwrap svg{width:190px;height:190px}
+.donut-centre{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;padding:0 34px}
+.donut-centre .dl{font-size:10.5px;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);font-weight:600;line-height:1.5}
+.donut-centre .dv{font-size:19px;font-weight:700;letter-spacing:-.01em;margin-top:3px}
+.legend{display:flex;flex-wrap:wrap;gap:6px 14px;justify-content:center;font-size:12.5px;color:var(--ink2);margin-top:8px}
+.legend i{display:inline-block;width:8px;height:8px;border-radius:50%;margin-right:6px;vertical-align:1px}
+.dayhead{display:flex;justify-content:space-between;font-size:11.5px;font-weight:600;letter-spacing:.04em;color:var(--muted);margin:18px 2px 8px;text-transform:uppercase}
+
+/* analytics bars */
+.bars{display:flex;align-items:flex-end;height:180px;gap:8px;padding-top:14px;border-bottom:1px solid var(--hair);
+  background:repeating-linear-gradient(to top,transparent 0,transparent 44px,var(--gridline) 44px,var(--gridline) 45px)}
+.bcol{flex:1;height:100%;display:flex;align-items:flex-end;justify-content:center}
+.bpair{display:flex;align-items:flex-end;gap:4px;height:100%}
+.bpair i{display:block;width:16px;border-radius:6px 6px 2px 2px}
+.bpair i.inc{background:linear-gradient(180deg,var(--green-b),var(--deep))}
+.bpair i.exp{background:var(--exp-red)}
+.blab{font-size:11px;color:var(--muted);padding-top:7px}
+.legend-dot{display:inline-block;width:9px;height:9px;border-radius:3px;margin-right:5px;vertical-align:0}
+.sumcards{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.sumcard{background:var(--glass);-webkit-backdrop-filter:blur(20px) saturate(160%);backdrop-filter:blur(20px) saturate(160%);border:1px solid var(--glass-brd);box-shadow:var(--shadow-sm),inset 0 0 0 1px var(--hair2);border-radius:var(--r);padding:15px 16px}
+.sumcard .sv{font-size:18.5px;font-weight:650;margin-top:5px}
+.sumcard.inc .sv{color:var(--green)}
+.totalhead{font-size:15px;font-weight:650;letter-spacing:-.01em;margin-bottom:4px}
+
+/* ============ forms / buttons ============ */
+.field{margin:13px 0}
+.field label{display:block;font-size:11px;letter-spacing:.07em;text-transform:uppercase;color:var(--muted);font-weight:600;margin-bottom:6px}
+.field input,.field select{width:100%;background:var(--field-bg);border:1px solid var(--field-brd);border-radius:12px;padding:11px 13px;font-size:14.5px;color:var(--ink);outline:none;transition:box-shadow .2s,border-color .2s}
+.field input:focus,.field select:focus{border-color:rgba(34,197,94,.5);box-shadow:0 0 0 3px rgba(34,197,94,.18)}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:7px;border:none;border-radius:999px;padding:11px 20px;font-size:13.5px;font-weight:600;letter-spacing:.01em;transition:transform .15s,box-shadow .2s}
+.btn.primary{background:#111111;color:#fff;box-shadow:0 8px 22px rgba(9,14,10,.18)}
+.btn.green{background:var(--green);color:#fff}
+.btn.glassb{background:var(--field-bg);border:1px solid var(--hair);color:var(--ink)}
+.btn:active{transform:scale(.98)}
+.addform{border-top:1px solid var(--hair);margin-top:14px;padding-top:6px}
+.addform h3{font-size:14px;font-weight:650;margin:12px 0 2px}
+
+/* ============ add / keypad ============ */
+.toggle{display:flex;background:var(--keybg);border:1px solid var(--hair);border-radius:999px;padding:4px;gap:4px}
+.toggle button{flex:1;border:none;background:transparent;border-radius:999px;padding:9px 0;font-size:13.5px;font-weight:600;color:var(--muted);transition:all .2s}
+.toggle button.on{background:#111111;color:#fff;box-shadow:0 4px 14px rgba(9,14,10,.18)}
+.toggle #tg-income.on{background:var(--green);box-shadow:0 4px 14px rgba(22,163,74,.28)}
+.amountbig{text-align:center;font-size:32px;font-weight:700;letter-spacing:-.01em;margin:20px 0 0;font-variant-numeric:tabular-nums}
+.amountsub{text-align:center;font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);font-weight:600;margin-top:3px}
+
+.chip{border:1px solid var(--hair);background:var(--glass-lo);border-radius:999px;padding:7px 14px;font-size:13px;font-weight:550;transition:all .15s}
+.chip.on{background:#111111;color:#fff;border-color:#111111}
+.catgrid{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-top:8px}
+.catcell{display:flex;flex-direction:column;align-items:center;gap:7px;padding:12px 2px 10px;border-radius:16px;border:1px solid var(--hair2);background:var(--glass-lo);font-size:11.5px;font-weight:550;color:var(--ink2);transition:all .15s}
+.catcell .chip-ico{width:38px;height:38px}
+.catcell.on{border-color:rgba(34,197,94,.55);background:var(--mint-glass);box-shadow:0 0 0 1px rgba(34,197,94,.25)}
+.keypad{display:grid;grid-template-columns:repeat(3,1fr);grid-template-rows:repeat(4,clamp(56px,9dvh,66px));column-gap:8px;row-gap:6px;width:100%;max-width:340px;margin:16px auto 0;justify-items:center;align-items:center}
+.keypad button{background:var(--keybg);-webkit-backdrop-filter:blur(12px);backdrop-filter:blur(12px);border:1px solid var(--keybrd);box-shadow:inset 0 0 0 1px var(--hair2),inset 0 1px 0 rgba(255,255,255,.14),var(--shadow-sm);border-radius:50%;width:clamp(56px,9dvh,66px);height:clamp(56px,9dvh,66px);padding:0;font-size:22px;font-weight:500;font-variant-numeric:tabular-nums;display:flex;align-items:center;justify-content:center;transition:transform .1s,background .15s}
+@media (hover:hover) and (pointer:fine){.keypad button:hover{background:var(--glass-hi)}}
+.keypad button:active{transform:scale(.93);background:var(--mint-glass)}
+.keypad button.kp-fn{font-size:15px;color:var(--muted)}
+.savebtn{width:100%;margin-top:16px;background:#111111;color:#fff;border:none;border-radius:999px;padding:14px 0;font-size:14px;font-weight:600;box-shadow:0 10px 26px rgba(9,14,10,.20);transition:transform .15s}
+.savebtn:active{transform:scale(.99)}
+
+/* ============ account ============ */
+.profhead{display:flex;align-items:center;gap:13px}
+.avatar{flex:none;width:47px;height:47px;border-radius:50%;background:linear-gradient(135deg,var(--deep),var(--green));color:#fff;display:flex;align-items:center;justify-content:center;font-size:18px;font-weight:650;overflow:hidden;cursor:pointer}
+.avatar img{width:100%;height:100%;object-fit:cover;display:block}
+.photorow{display:flex;gap:8px;flex-wrap:wrap;margin:10px 0 2px}
+.photorow .btn{display:inline-flex;align-items:center;gap:7px}
+.photorow .btn svg{width:16px;height:16px}
+.editbtn{margin-left:auto;background:var(--field-bg);border:1px solid var(--hair);border-radius:999px;padding:8px 16px;font-size:13px;font-weight:600}
+.membercard{background:linear-gradient(135deg,rgba(9,14,10,.92),rgba(11,61,36,.88));border:1px solid rgba(255,255,255,.14);border-radius:var(--r);padding:16px 18px;color:#fff;display:flex;align-items:center;gap:13px;margin-bottom:14px;box-shadow:0 14px 34px rgba(9,14,10,.18)}
+.membercard .mt{font-weight:650;font-size:15px;letter-spacing:-.01em}
+.membercard .ms{font-size:12px;color:var(--glass-hi);margin-top:1px}
+.menu{padding:4px 16px}
+.menu button{display:flex;align-items:center;gap:12px;width:100%;background:none;border:none;border-bottom:1px solid var(--hair);padding:13px 0;font-size:14px;font-weight:550;text-align:left}
+.menu button:last-child{border-bottom:none}
+.menu .arr{margin-left:auto;color:var(--muted);display:flex}
+.menu .arr svg{width:16px;height:16px}
+
+/* ============ floating glass bottom nav ============ */
+.bottomnav{position:fixed;left:50%;transform:translateX(-50%);bottom:14px;width:min(448px,calc(100% - 28px));z-index:70;
+  background:var(--glass-hi);-webkit-backdrop-filter:blur(20px) saturate(160%);backdrop-filter:blur(20px) saturate(160%);
+  border:1px solid var(--glass-brd);box-shadow:0 16px 40px rgba(11,61,36,.16),inset 0 0 0 1px var(--hair2);border-radius:999px}
+.bn-in{display:flex;align-items:flex-end;justify-content:space-around;padding:8px 10px}
+.bn-in>button[data-nav]{background:none;border:none;display:flex;flex-direction:column;align-items:center;gap:3px;font-size:10.5px;font-weight:600;color:var(--muted);padding:3px 8px;min-width:56px}
+.bn-in>button[data-nav] svg{width:21px;height:21px}
+.bn-in>button[data-nav].active{color:var(--green)}
+.plusbtn{flex:none;width:52px;height:52px;border-radius:50%;background:#111111;color:#fff;border:2px solid rgba(34,197,94,.55);box-shadow:0 10px 24px rgba(9,14,10,.28),0 0 0 4px var(--glass-hi);display:flex;align-items:center;justify-content:center;transform:translateY(-13px);transition:transform .15s}
+.plusbtn svg{width:22px;height:22px}
+.plusbtn:active{transform:translateY(-13px) scale(.96)}
+
+/* ============ desktop ============ */
+@media (min-width:1024px){
+  .orb.o1{width:640px;height:640px;background:rgba(20,83,45,.24)}
+  .orb.o2{width:560px;height:560px}
+  body{background:linear-gradient(120deg,var(--bg) 55%,var(--mint-glass) 82%,rgba(11,61,36,.10))}
+  .layout{display:grid;grid-template-columns:264px minmax(0,1fr) 322px;gap:24px;max-width:1460px;margin:0 auto;padding:24px;align-items:start}
+  .mobiletop,.bottomnav{display:none}
+  .center{max-width:780px;width:100%;margin:0 auto;padding:0 0 40px}
+  .sidebar{display:flex;flex-direction:column;gap:6px;position:sticky;top:24px;height:calc(100vh - 48px);
+    background:var(--field-bg);-webkit-backdrop-filter:blur(20px) saturate(160%);backdrop-filter:blur(20px) saturate(160%);
+    border:1px solid var(--glass-brd);border-right:1px solid var(--glass-brd);box-shadow:var(--shadow),inset 0 0 0 1px var(--hair2);border-radius:var(--r);padding:20px 16px}
+  .side-nav{display:flex;flex-direction:column;gap:2px;margin-top:20px}
+  .side-nav button,.side-foot button{display:flex;align-items:center;gap:11px;background:none;border:none;border-radius:12px;padding:10px 12px;font-size:13.5px;font-weight:550;color:var(--ink2);text-align:left;transition:background .15s}
+  .side-nav button svg,.side-foot button svg{width:19px;height:19px;color:var(--muted)}
+  .side-nav button:hover,.side-foot button:hover{background:var(--glass-hi)}
+  .side-nav button.active{background:var(--mint-glass);color:var(--deep)}
+  .side-nav button.active svg{color:var(--green)}
+  .promo{margin-top:22px;background:var(--mint-glass);border:1px solid var(--glass-brd);border-radius:16px;padding:16px}
+  .promo p{font-size:12.5px;line-height:1.6;color:var(--ink2);margin:0 0 12px}
+  .side-foot{margin-top:auto;border-top:1px solid var(--hair);padding-top:10px;display:flex;flex-direction:column;gap:2px}
+  .deskhead{display:block;margin-bottom:4px}
+  .deskhead h1{font-size:24px;font-weight:700;letter-spacing:-.02em;margin:2px 0 14px}
+  .searchbar{display:flex;align-items:center;gap:9px;background:var(--glass-hi);-webkit-backdrop-filter:blur(20px) saturate(160%);backdrop-filter:blur(20px) saturate(160%);border:1px solid var(--glass-brd);box-shadow:var(--shadow-sm),inset 0 0 0 1px var(--hair2);border-radius:999px;padding:10px 16px;color:var(--muted)}
+  .searchbar svg{width:17px;height:17px;flex:none}
+  .searchbar input{border:none;background:none;outline:none;flex:1;font-size:14px;color:var(--ink)}
+  .tabrow{display:flex;gap:8px;margin:14px 0 4px;flex-wrap:wrap}
+  .tabpill{border:1px solid var(--hair);background:var(--glass-lo);border-radius:999px;padding:8px 16px;font-size:13px;font-weight:600;color:var(--ink2);transition:all .2s}
+  .tabpill.active,.tabpill[data-nav].active{background:#111111;color:#fff;border-color:#111111}
+  .rightpanel{display:flex;flex-direction:column;gap:14px;position:sticky;top:24px}
+  .rp-dark{background:linear-gradient(135deg,rgba(9,14,10,.92),rgba(11,61,36,.88));-webkit-backdrop-filter:blur(20px) saturate(160%);backdrop-filter:blur(20px) saturate(160%);border:1px solid rgba(255,255,255,.14);border-radius:var(--r);padding:20px;color:#fff;box-shadow:0 18px 44px rgba(9,14,10,.20)}
+  .rp-dark .lbl{color:var(--field-bg)}
+  .rp-dark .big{font-size:25px;font-weight:700;letter-spacing:-.02em;margin:5px 0 3px}
+  .rp-dark .sub{font-size:12px;color:var(--green-xl)}
+  .rp-dark .rp-row{display:flex;justify-content:space-between;gap:10px;padding:8px 0;border-top:1px solid rgba(255,255,255,.12);font-size:13px}
+  .rp-dark .rp-row span{color:var(--glass-hi)}
+  .rp-dark .rp-row b{font-weight:650}
+  .rp-card .rp-row{display:flex;justify-content:space-between;gap:10px;padding:9px 0;border-top:1px solid var(--hair);font-size:13px;color:var(--ink2)}
+  .rp-card .rp-row:first-child{border-top:none}
+  .rp-card .rp-row small{color:var(--muted);font-size:11.5px}
+  .rp-card .rp-row b{font-weight:650;color:var(--ink)}
+  .rp-card{background:var(--glass);-webkit-backdrop-filter:blur(20px) saturate(160%);backdrop-filter:blur(20px) saturate(160%);border:1px solid var(--glass-brd);box-shadow:var(--shadow),inset 0 0 0 1px var(--hair2);border-radius:var(--r);padding:18px}
+  .rp-card .wrow{padding:10px 0}
+  .phone-mock{border:1px solid var(--hair);border-radius:26px;padding:15px;background:var(--glass-lo)}
+  .pm-line{height:8px;border-radius:99px;background:var(--track);margin:11px 0}
+  .pm-line.g{background:rgba(34,197,94,.45)}
+  .pm-bar-row{display:flex;align-items:flex-end;gap:7px;height:56px;margin-top:14px}
+  .pm-bar-row i{flex:1;border-radius:5px 5px 2px 2px;background:linear-gradient(180deg,var(--green-b),var(--deep))}
+  .pm-bar-row i.l{background:var(--mint2)}
+  .card,.stat,.sumcard,.listcard{transition:transform .2s,box-shadow .2s}
+  .card:hover,.stat:hover,.sumcard:hover{transform:translateY(-1px);box-shadow:0 16px 44px rgba(11,61,36,.13)}
+}
+
+
+
+/* ============ UI6 merged Analytics + Transactions screen ============ */
+.duo{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:14px;align-items:stretch}
+.duo>.card{margin-bottom:0;height:100%}
+.duo-card{padding:14px}
+.duo .lbl{line-height:1.6}
+.duo-legend{font-size:10.5px;color:var(--muted);white-space:nowrap}
+.bars-sm{height:118px;padding-top:10px;background:repeating-linear-gradient(to top,transparent 0,transparent 29px,var(--gridline) 29px,var(--gridline) 30px)}
+.bars-sm .bpair{gap:3px}
+.bars-sm .bpair i{width:11px;border-radius:5px 5px 2px 2px}
+.bars-sm + div .blab{font-size:10px;padding-top:6px}
+.donut-sm{width:148px;height:148px;margin:4px auto 2px}
+.donut-sm svg{width:148px;height:148px}
+.donut-sm .donut-centre{padding:0 27px}
+.donut-sm .donut-centre .dv{font-size:15px}
+#c-legend{flex-direction:column;align-items:center;gap:4px;font-size:11.5px;margin-top:6px}
+.sumstrip{display:flex;padding:8px 2px}
+.ss-cell{flex:1;text-align:center;padding:8px 3px;border-right:1px solid var(--hair);min-width:0}
+.ss-cell:last-child{border-right:none}
+.ss-cell .sv{font-size:14.5px;font-weight:650;margin-top:4px;line-height:1.45}
+.ss-cell .sv.g{color:var(--green)}
+@media (max-width:380px){
+  .duo{gap:9px}
+  .duo-card{padding:11px}
+  .donut-sm{width:126px;height:126px}
+  .donut-sm svg{width:126px;height:126px}
+  .donut-sm .donut-centre{padding:0 22px}
+  .donut-sm .donut-centre .dv{font-size:13px}
+  .ss-cell .sv{font-size:13px}
+}
+
+/* ============ UI5 i18n / language system ============ */
+/* Uppercase tracked labels: ENGLISH ONLY */
+.lbl,.sl,.field label,.dayhead,.donut-centre .dl,.amountsub{letter-spacing:0!important;text-transform:none!important;line-height:1.75}
+body.lang-en .lbl,body.lang-en .sl,body.lang-en .field label,body.lang-en .amountsub{letter-spacing:.08em!important;text-transform:uppercase!important;line-height:1.5}
+body.lang-en .dayhead{letter-spacing:.04em!important;text-transform:uppercase!important}
+body.lang-en .donut-centre .dl{letter-spacing:.08em!important;text-transform:uppercase!important}
+
+/* Myanmar: Myanmar font first, tall leading, no tracking */
+body.lang-my{font-family:"Noto Sans Myanmar","Pyidaungsu",-apple-system,BlinkMacSystemFont,"Inter","Segoe UI",Roboto,sans-serif}
+body.lang-my .lbl,body.lang-my .sl,body.lang-my .field label,body.lang-my .dayhead,body.lang-my .donut-centre .dl,body.lang-my .amountsub,body.lang-my .sechead h2,body.lang-my .totalhead,body.lang-my .addform h3{font-family:"Noto Sans Myanmar","Pyidaungsu",sans-serif;letter-spacing:0!important;line-height:1.9}
+/* Thai: stacked vowels/tone marks need tall leading too */
+body.lang-th .lbl,body.lang-th .sl,body.lang-th .field label,body.lang-th .dayhead,body.lang-th .donut-centre .dl,body.lang-th .amountsub,body.lang-th .sechead h2,body.lang-th .totalhead,body.lang-th .addform h3{letter-spacing:0!important;line-height:1.8}
+/* Chinese: comfortable leading */
+body.lang-zh .lbl,body.lang-zh .sl,body.lang-zh .field label,body.lang-zh .dayhead,body.lang-zh .donut-centre .dl,body.lang-zh .amountsub{letter-spacing:0!important;line-height:1.65}
+/* Never clip translated labels: wrapping allowed everywhere */
+.sechead h2{display:inline-block;max-width:100%}
+.tn{white-space:normal;overflow:visible;text-overflow:clip;line-height:1.55}
+.catcell{height:auto;min-height:78px}
+.catcell span:last-child{line-height:1.6;text-align:center;overflow-wrap:break-word}
+.chip{line-height:1.6;text-align:center}
+.bn-in>button[data-nav] span{line-height:1.5;text-align:center}
+.side-nav button span,.side-foot button span,.menu button{line-height:1.65}
+.hero-grid span{line-height:1.7}
+.tabpill{line-height:1.6}
+.desk-toprow{display:flex;align-items:flex-start;justify-content:space-between;gap:14px}
+.desk-toprow h1{flex:1;min-width:0}
+/* Language button + glass menu */
+.langwrap{position:relative;flex:none}
+.langbtn{display:inline-flex;align-items:center;gap:7px;border:1px solid var(--hair);background:var(--field-bg);border-radius:999px;padding:8px 13px;font-size:13px;font-weight:600;color:var(--ink2);line-height:1.6;transition:transform .15s,box-shadow .2s;white-space:nowrap}
+.langbtn svg{width:17px;height:17px;flex:none;color:var(--deep)}
+.langbtn:active{transform:scale(.97)}
+.langmenu{display:none;position:absolute;right:0;top:calc(100% + 8px);z-index:90;min-width:172px;background:var(--glass-menu);-webkit-backdrop-filter:blur(20px) saturate(160%);backdrop-filter:blur(20px) saturate(160%);border:1px solid var(--glass-brd);box-shadow:var(--shadow),inset 0 0 0 1px var(--hair2);border-radius:16px;padding:6px}
+.langopt{display:flex;align-items:center;justify-content:space-between;gap:10px;width:100%;background:none;border:none;border-radius:11px;padding:9px 11px;font-size:14px;font-weight:550;line-height:1.7;text-align:left}
+.langopt:hover{background:var(--mint-glass)}
+.langopt.on{background:var(--mint-glass);color:var(--deep);font-weight:650}
+.langcheck{display:inline-flex;color:var(--green)}
+.langcheck svg{width:16px;height:16px}
+/* Settings language rows */
+.langrow{display:flex;align-items:center;gap:11px;width:100%;background:none;border:none;border-bottom:1px solid var(--hair);padding:12px 2px;font-size:14.5px;font-weight:550;line-height:1.7;text-align:left}
+.langrow:last-child{border-bottom:none}
+.langrow.on{color:var(--deep);font-weight:650}
+.langrow-ico{flex:none;width:34px;height:34px;border-radius:50%;background:rgba(34,197,94,.10);color:var(--deep);display:flex;align-items:center;justify-content:center}
+.langrow-ico svg{width:18px;height:18px}
+.langrow-name{flex:1}
+.langrow .langcheck{margin-left:auto}
+@media (max-width:1023px){.desk-toprow{display:block}}
+
+/* ============ UI7 Message (user-to-user chat) ============ */
+.msg-plus{width:56px;height:56px;border-radius:50%;background:#111111;color:#fff;border:2px solid rgba(34,197,94,.55);box-shadow:0 10px 24px rgba(9,14,10,.28),0 0 0 4px var(--glass-hi);display:flex;align-items:center;justify-content:center;margin:18px auto 12px;transition:transform .15s}
+.msg-plus svg{width:24px;height:24px}
+.msg-plus:active{transform:scale(.96)}
+.msg-gate{text-align:center;padding:30px 22px;max-width:520px;margin-left:auto;margin-right:auto}
+.msg-gate-ico{width:72px;height:72px;border-radius:50%;background:rgba(34,197,94,.12);color:var(--deep);display:flex;align-items:center;justify-content:center;margin:0 auto 16px}
+.msg-gate-ico svg{width:34px;height:34px}
+.msg-gate-title{font-size:17px;font-weight:650;letter-spacing:-.01em;line-height:1.7;margin:0 0 8px}
+.msg-gate-sub{font-size:13.5px;line-height:1.85;color:var(--muted);margin:0 auto;max-width:340px}
+.msg-create-label{font-size:13px;font-weight:600;color:var(--ink2);text-align:center}
+.msg-userchip{display:flex;align-items:center;gap:9px;flex-wrap:wrap}
+.msg-atchip{display:inline-flex;align-items:center;gap:6px;background:var(--mint-glass);border:1px solid rgba(34,197,94,.30);color:var(--deep);border-radius:999px;padding:5px 12px;font-size:12.5px;font-weight:650}
+.msg-editbtn{margin-left:auto;background:var(--field-bg);border:1px solid var(--hair);border-radius:999px;padding:7px 14px;font-size:12.5px;font-weight:600}
+.msg-atwrap{display:flex;align-items:center;background:var(--field-bg);border:1px solid var(--field-brd);border-radius:12px;overflow:hidden}
+.msg-atwrap:focus-within{border-color:rgba(34,197,94,.5);box-shadow:0 0 0 3px rgba(34,197,94,.18)}
+.msg-at{flex:none;padding:0 4px 0 13px;font-weight:650;color:var(--deep);font-size:14.5px}
+.msg-atwrap input{flex:1;border:none!important;background:none!important;box-shadow:none!important;padding-left:2px!important}
+.msg-hint{font-size:12.5px;line-height:1.7;margin-top:6px;color:var(--muted)}
+.msg-hint.ok{color:var(--green);font-weight:600}
+.msg-hint.err{color:#101410;font-weight:600}
+.msg-search{display:flex;align-items:center;gap:9px;background:var(--glass-hi);-webkit-backdrop-filter:blur(20px) saturate(160%);backdrop-filter:blur(20px) saturate(160%);border:1px solid var(--glass-brd);box-shadow:var(--shadow-sm),inset 0 0 0 1px var(--hair2);border-radius:999px;padding:11px 16px;color:var(--muted);margin-bottom:14px}
+.msg-search svg{width:17px;height:17px;flex:none}
+.msg-search input{border:none;background:none;outline:none;flex:1;font-size:14px;color:var(--ink);min-width:0}
+.pavatar{flex:none;width:42px;height:42px;border-radius:50%;background:linear-gradient(135deg,var(--deep),var(--green));color:#fff;display:flex;align-items:center;justify-content:center;font-size:16px;font-weight:650}
+.pavatar.sm{width:36px;height:36px;font-size:14px}
+.msgrow{display:flex;align-items:center;gap:12px;width:100%;background:none;border:none;border-bottom:1px solid var(--hair);padding:12px 0;font-size:14px;text-align:left;color:inherit}
+.msgrow:last-child{border-bottom:none}
+.msgrow .tm{flex:1;min-width:0}
+.msgrow .pn{font-size:14px;font-weight:600;display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.msgrow .pu{font-size:12px;color:var(--muted);display:block;margin-top:1px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.msgrow .ptag{flex:none;font-size:10.5px;font-weight:650;color:var(--deep);background:var(--mint-glass);border-radius:999px;padding:3px 9px}
+.msgrow .ptime{flex:none;font-size:11px;color:var(--muted)}
+.msg-openbtn{flex:none;background:#111111;color:#fff;border:none;border-radius:999px;padding:8px 14px;font-size:12.5px;font-weight:600}
+/* chat sub-view */
+.chat-head{display:flex;align-items:center;gap:11px;margin-bottom:12px}
+.chat-back{flex:none;width:36px;height:36px;border-radius:50%;border:1px solid var(--hair);background:var(--field-bg);display:flex;align-items:center;justify-content:center;color:var(--ink2)}
+.chat-back svg{width:17px;height:17px}
+.chat-head .tm{flex:1;min-width:0}
+.chat-head .pn{font-size:15px;font-weight:650;display:block}
+.chat-head .pu{font-size:12px;color:var(--muted);display:block}
+.chat-online{font-size:11px;color:var(--green);font-weight:600}
+.sharepill{display:inline-flex;align-items:center;gap:7px;background:var(--field-bg);-webkit-backdrop-filter:blur(20px) saturate(160%);backdrop-filter:blur(20px) saturate(160%);border:1px solid rgba(34,197,94,.35);color:var(--deep);border-radius:999px;padding:8px 14px;font-size:12.5px;font-weight:600;margin-bottom:10px}
+.sharepill svg{width:15px;height:15px}
+.bubbles{display:flex;flex-direction:column;gap:9px;padding:4px 0 12px}
+.bub{max-width:80%;padding:10px 13px;font-size:14px;line-height:1.65;word-wrap:break-word;overflow-wrap:break-word}
+.bub.them{align-self:flex-start;background:var(--glass-hi);-webkit-backdrop-filter:blur(20px) saturate(160%);backdrop-filter:blur(20px) saturate(160%);border:1px solid var(--glass-brd);border-radius:18px 18px 18px 6px;box-shadow:var(--shadow-sm)}
+.bub.me{align-self:flex-end;background:linear-gradient(135deg,var(--deep),var(--green));color:#fff;border-radius:18px 18px 6px 18px;box-shadow:0 8px 20px rgba(11,61,36,.20)}
+.bub .btime{display:block;font-size:10px;margin-top:4px;opacity:.65;text-align:right}
+.bub.cardmsg{background:linear-gradient(135deg,rgba(9,14,10,.94),rgba(11,61,36,.92));color:#fff;border-radius:18px;padding:13px 15px;min-width:210px}
+.bub.cardmsg .ct{font-size:11px;letter-spacing:.05em;color:var(--green-xl);font-weight:700;margin-bottom:7px}
+.bub.cardmsg .crow{display:flex;justify-content:space-between;gap:16px;font-size:13px;padding:3px 0}
+.bub.cardmsg .crow span{color:var(--glass-hi)}
+.bub.cardmsg .crow b{font-weight:650}
+.chat-img{max-width:220px;width:100%;border-radius:12px;display:block}
+.chat-vid{max-width:230px;width:100%;border-radius:12px;display:block}
+.filecard{display:flex;align-items:center;gap:10px;min-width:180px}
+.filecard .fic{flex:none;width:36px;height:36px;border-radius:10px;background:rgba(34,197,94,.14);color:var(--deep);display:flex;align-items:center;justify-content:center}
+.bub.me .filecard .fic{background:rgba(255,255,255,.18);color:#fff}
+.filecard .fic svg{width:18px;height:18px}
+.filecard .fn{font-size:13px;font-weight:600;display:block;word-break:break-all}
+.filecard .fs{font-size:11px;opacity:.7;display:block}
+.attach-note{font-size:11px;color:var(--muted);line-height:1.7;margin-top:8px}
+.composer{position:sticky;bottom:96px;z-index:40;display:flex;align-items:center;gap:8px;background:var(--glass-hi);-webkit-backdrop-filter:blur(20px) saturate(160%);backdrop-filter:blur(20px) saturate(160%);border:1px solid var(--glass-brd);box-shadow:var(--shadow),inset 0 0 0 1px var(--hair2);border-radius:999px;padding:6px}
+.composer .attachbtn{flex:none;width:38px;height:38px;border-radius:50%;border:1px solid var(--hair);background:var(--field-bg);display:flex;align-items:center;justify-content:center;color:var(--deep)}
+.composer .attachbtn svg{width:18px;height:18px}
+.composer input[type=text]{flex:1;border:none;background:none;outline:none;font-size:14px;color:var(--ink);min-width:0;padding:8px 2px}
+.composer .sendbtn{flex:none;width:38px;height:38px;border-radius:50%;border:none;background:#111111;color:#fff;display:flex;align-items:center;justify-content:center;box-shadow:0 6px 16px rgba(9,14,10,.22)}
+.composer .sendbtn svg{width:17px;height:17px}
+@media (min-width:1024px){.composer{bottom:18px}}
+
+
+/* ============ UI7 Message — two-pane / responsive layout ============ */
+.msg-setup{max-width:520px;margin-left:auto;margin-right:auto}
+.msg-layout{display:block}
+.msg-right{display:none}
+.msg-layout.chat-open .msg-left{display:none}
+.msg-layout.chat-open .msg-right{display:block}
+.msg-empty{background:var(--glass);-webkit-backdrop-filter:blur(20px) saturate(160%);backdrop-filter:blur(20px) saturate(160%);border:1px solid var(--glass-brd);box-shadow:var(--shadow),inset 0 0 0 1px var(--hair2);border-radius:var(--r);display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;min-height:300px;padding:28px 20px;color:var(--muted)}
+.msg-empty p{font-size:14.5px;font-weight:550;margin:0}
+.msg-empty .msg-gate-ico{margin:0 auto 14px}
+@media (min-width:1024px){
+  .msg-layout{display:grid;grid-template-columns:340px minmax(0,1fr);gap:16px;align-items:start}
+  .msg-layout .msg-left{display:block!important}
+  .msg-layout .msg-right{display:block!important}
+  .msg-right .bubbles{max-height:54vh;overflow-y:auto;padding-right:4px}
+  .msg-empty{min-height:430px}
+  .msg-gate{margin-top:26px}
+  .center:has(> #page-message.active){max-width:1020px}
+  #page-add .card,#page-accounts .card,#page-assets .card,#page-settings .card{max-width:640px}
+}
+
+
+/* ============ UI8 Dark Mode (CSS variables flip) ============ */
+html[data-theme="dark"]{
+  color-scheme:dark;
+  --ink:#F2F5F2; --ink2:#D7E0D7; --muted:#9DB09D;
+  --bg:#0A0E0A;
+  --glass:rgba(22,30,22,.55); --glass-brd:rgba(255,255,255,.09);
+  --glass-hi:rgba(28,38,28,.62); --glass-lo:rgba(24,32,24,.50); --glass-menu:rgba(18,26,18,.88);
+  --field-bg:rgba(28,38,28,.55); --field-brd:rgba(255,255,255,.12);
+  --keybg:rgba(28,38,28,.50); --keybrd:rgba(255,255,255,.10);
+  --mint-glass:rgba(22,163,74,.20);
+  --hair:rgba(255,255,255,.08); --hair2:rgba(255,255,255,.05);
+  --gridline:rgba(255,255,255,.07); --track:rgba(255,255,255,.13);
+  --shadow:0 12px 40px rgba(0,0,0,.45); --shadow-sm:0 4px 18px rgba(0,0,0,.35);
+  --deep:#4ADE80; --exp-red:#F97066;
+}
+html[data-theme="dark"] .orb.o1{background:rgba(20,83,45,.13)}
+html[data-theme="dark"] .orb.o2{background:rgba(34,197,94,.10)}
+html[data-theme="dark"] .orb.o3{background:rgba(95,107,95,.08)}
+/* primary CTAs: black is invisible on dark -> green in dark mode */
+html[data-theme="dark"] .btn.primary,html[data-theme="dark"] .savebtn,
+html[data-theme="dark"] .msg-openbtn,html[data-theme="dark"] .composer .sendbtn{
+  background:var(--green);color:#fff;box-shadow:0 8px 22px rgba(22,163,74,.32)}
+html[data-theme="dark"] .tabpill.active,html[data-theme="dark"] .chip.on{
+  background:var(--green);border-color:var(--green);color:#fff}
+html[data-theme="dark"] .toggle button.on{background:#F2F5F2;color:#101410;box-shadow:0 4px 14px rgba(0,0,0,.35)}
+html[data-theme="dark"] .toggle #tg-income.on{background:var(--green);color:#fff}
+html[data-theme="dark"] .plusbtn,html[data-theme="dark"] .msg-plus{
+  box-shadow:0 10px 24px rgba(0,0,0,.5),0 0 0 4px rgba(255,255,255,.14)}
+html[data-theme="dark"] .keypad button:active{background:rgba(22,163,74,.25)}
+html[data-theme="dark"] .catcell.on{background:rgba(22,163,74,.18)}
+html[data-theme="dark"] .side-nav button.active{background:rgba(22,163,74,.18);color:var(--green-xl)}
+html[data-theme="dark"] .langopt.on,html[data-theme="dark"] .langopt:hover{background:rgba(22,163,74,.18)}
+html[data-theme="dark"] .msg-hint.err{color:#F2F5F2}
+html[data-theme="dark"] select option{background:#162016;color:#F2F5F2}
+/* Settings theme switch */
+.switch{flex:none;width:50px;height:29px;border-radius:999px;border:1px solid var(--hair);background:var(--glass-lo);position:relative;transition:background .2s;padding:0;cursor:pointer}
+.switch .knob{position:absolute;top:2px;left:2px;width:23px;height:23px;border-radius:50%;background:#fff;box-shadow:0 2px 6px rgba(0,0,0,.25);transition:left .2s}
+.switch.on{background:var(--green);border-color:var(--green)}
+.switch.on .knob{left:23px}
+
+/* ============ UI9 Add screen: ONE compact category grid, content-height card (keypad capped, no stretch), NO scroll ============ */
+.amtrow{display:flex;align-items:baseline;justify-content:center;gap:9px}
+@media (max-width:1023px){
+  
+  body.on-add .center{padding-bottom:84px}
+  #page-add.active{display:block}
+  #page-add .sechead{flex:none;margin:6px 2px 4px}
+  #page-add .sechead h2{font-size:15px}
+  .addcard{display:block;padding:12px 14px;margin-bottom:0}
+  .addcard .toggle{flex:none}
+  .addcard .toggle button{padding:6px 0}
+  .addcard .amtrow{flex:none;margin-top:8px}
+  .addcard .amountbig{font-size:27px;margin:0;line-height:1.15}
+  .addcard .amountsub{margin:0}
+  .addcat-lbl{flex:none;margin:6px 0 4px}
+  .addcard .catgrid{flex:none;display:grid;grid-template-columns:repeat(4,1fr);gap:6px;margin-top:0}
+  .addcard .catcell{min-height:0;padding:4px 2px 3px;gap:3px;border-radius:12px;font-size:10.5px}
+  .addcard .catcell .chip-ico{width:22px;height:22px}
+  .addcard .catcell .chip-ico svg{width:13px;height:13px}
+  .addcard .catcell span:last-child{line-height:1.25}
+  .daterow{flex:none;display:flex;gap:10px;margin-top:9px}
+  .daterow .field{margin:0;flex:1;min-width:0}
+  .daterow .field.note-f{flex:1.25}
+  .daterow .field label{font-size:10px;margin-bottom:3px}
+  .daterow .field input{padding:6px 10px;font-size:13.5px;border-radius:10px}
+  .addcard .keypad{display:grid;grid-template-columns:repeat(3,1fr);grid-template-rows:repeat(4,clamp(56px,9dvh,66px));column-gap:8px;row-gap:6px;width:100%;max-width:340px;margin:16px auto 0;justify-items:center;align-items:center}
+  .addcard .keypad button{padding:0}
+  .addcard .savebtn{flex:none;margin-top:10px;padding:10px 0}
+  @media (max-height:700px){
+    #page-add .sechead{margin:4px 2px 2px}
+    .addcat-lbl{display:none}
+    .addcard{padding:10px 12px}
+    .addcard .amtrow{margin-top:6px}
+    .addcard .amountbig{font-size:24px}
+    .addcard .catgrid{gap:5px}
+    .addcard .catcell{padding:3px 2px}
+    .addcard .catcell .chip-ico{width:20px;height:20px}
+    .daterow{margin-top:7px}
+    .addcard .keypad{margin-top:8px}
+    .addcard .savebtn{margin-top:8px}
+  }
+}
+@media (min-width:1024px){
+  
+  .addcard{display:flex;flex-direction:column}
+  .addcat-lbl{margin:14px 0 2px}
+  .addcard .catgrid{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-top:0}
+  .addcard .catcell{min-height:0;padding:8px 2px 7px;gap:5px;font-size:11px}
+  .addcard .catcell .chip-ico{width:28px;height:28px}
+  .addcard .catcell .chip-ico svg{width:16px;height:16px}
+  .daterow{display:flex;gap:12px}
+  .daterow .field{flex:1;min-width:0;margin:13px 0 0}
+  .daterow .field.note-f{flex:1.25}
+}
+
+/* ============ UI9 dark-mode surface audit (explicit per-surface dark values) ============ */
+html[data-theme="dark"] .card,html[data-theme="dark"] .listcard,html[data-theme="dark"] .stat,
+html[data-theme="dark"] .sumcard,html[data-theme="dark"] .msg-empty{background:rgba(22,30,22,.55);border-color:rgba(255,255,255,.09)}
+html[data-theme="dark"] .mobiletop,html[data-theme="dark"] .bottomnav,html[data-theme="dark"] .composer,
+html[data-theme="dark"] .msg-search,html[data-theme="dark"] .searchbar{background:rgba(28,38,28,.62);border-color:rgba(255,255,255,.09)}
+html[data-theme="dark"] .sidebar{background:rgba(22,30,22,.55);border-color:rgba(255,255,255,.09)}
+html[data-theme="dark"] .rp-card{background:rgba(22,30,22,.55);border-color:rgba(255,255,255,.09)}
+html[data-theme="dark"] .catcell{background:rgba(24,32,24,.50);color:#D7E0D7}
+html[data-theme="dark"] .catcell.on{background:rgba(22,163,74,.18);border-color:rgba(34,197,94,.55);color:#F2F5F2}
+html[data-theme="dark"] .toggle{background:rgba(28,38,28,.50);border-color:rgba(255,255,255,.08)}
+html[data-theme="dark"] .field input,html[data-theme="dark"] .field select,html[data-theme="dark"] .msg-atwrap{background:rgba(28,38,28,.55);border-color:rgba(255,255,255,.12);color:#F2F5F2}
+html[data-theme="dark"] .keypad button{background:rgba(28,38,28,.50);border-color:rgba(255,255,255,.10);color:#F2F5F2}
+html[data-theme="dark"] .keypad button.kp-fn{color:#9DB09D}
+html[data-theme="dark"] .keypad button:active{background:rgba(22,163,74,.25)}
+html[data-theme="dark"] .icobtn,html[data-theme="dark"] .editbtn,html[data-theme="dark"] .chat-back,
+html[data-theme="dark"] .delbtn,html[data-theme="dark"] .sharepill,html[data-theme="dark"] .langbtn,
+html[data-theme="dark"] .msg-editbtn,html[data-theme="dark"] .composer .attachbtn,html[data-theme="dark"] .btn.glassb{background:rgba(28,38,28,.55);border-color:rgba(255,255,255,.08);color:#D7E0D7}
+html[data-theme="dark"] .tabpill{background:rgba(24,32,24,.50);border-color:rgba(255,255,255,.08);color:#D7E0D7}
+html[data-theme="dark"] .chip{background:rgba(24,32,24,.50);color:#D7E0D7}
+html[data-theme="dark"] .bub.them{background:rgba(28,38,28,.62);border-color:rgba(255,255,255,.09);color:#F2F5F2}
+html[data-theme="dark"] .langmenu{background:rgba(18,26,18,.88)}
+html[data-theme="dark"] .phone-mock{background:rgba(24,32,24,.50)}
+html[data-theme="dark"] .switch{background:rgba(24,32,24,.50)}
+html[data-theme="dark"] .sechead h2,html[data-theme="dark"] .deskhead h1,html[data-theme="dark"] .totalhead,html[data-theme="dark"] .addform h3{color:#F2F5F2}
+html[data-theme="dark"] .hero .lbl,html[data-theme="dark"] .hero-grid span,
+html[data-theme="dark"] .rp-dark .lbl,html[data-theme="dark"] .rp-dark .rp-row span,
+html[data-theme="dark"] .bub.cardmsg .crow span,html[data-theme="dark"] .membercard .ms{color:#D7E0D7}
+html[data-theme="dark"] .side-nav button,html[data-theme="dark"] .side-foot button{color:#D7E0D7}
+html[data-theme="dark"] .promo{background:rgba(22,163,74,.20)}
+html[data-theme="dark"] .promo p{color:#D7E0D7}
+
+/* ============ UI11 · Midnight Premium night theme (replaces UI8/UI9 dark values) ============ */
+/* Layered ink-green background + brand-green glows (orbs) */
+html[data-theme="dark"] body{background:linear-gradient(180deg,#0A100C,#060807)}
+html[data-theme="dark"] .orb.o1{background:rgba(34,197,94,.14)}
+html[data-theme="dark"] .orb.o2{background:rgba(74,222,128,.08)}
+html[data-theme="dark"] .orb.o3{background:rgba(34,197,94,.05)}
+/* Midnight Premium variable system (same names -> components inherit) */
+html[data-theme="dark"]{
+  --ink:#F4F8F4; --ink2:#B9C8BB; --muted:#8CA08D;
+  --bg:#070B09;
+  --glass:linear-gradient(165deg,rgba(255,255,255,.075),rgba(255,255,255,.028));
+  --glass-brd:rgba(255,255,255,.09);
+  --glass-hi:linear-gradient(165deg,rgba(255,255,255,.09),rgba(255,255,255,.04));
+  --glass-lo:rgba(255,255,255,.03); --glass-menu:rgba(10,16,12,.92);
+  --field-bg:rgba(255,255,255,.055); --field-brd:rgba(255,255,255,.10);
+  --keybg:linear-gradient(165deg,rgba(255,255,255,.07),rgba(255,255,255,.03)); --keybrd:rgba(255,255,255,.10);
+  --mint-glass:rgba(34,197,94,.16);
+  --hair:rgba(255,255,255,.09); --hair2:rgba(255,255,255,.05);
+  --gridline:rgba(255,255,255,.08); --track:rgba(255,255,255,.08);
+  --shadow:0 18px 40px rgba(0,0,0,.45); --shadow-sm:0 8px 22px rgba(0,0,0,.35);
+  --deep:#4ADE80; --exp-red:#F97066;
+}
+/* Cards: frosted gradient glass, clearly elevated */
+html[data-theme="dark"] .card,html[data-theme="dark"] .listcard,html[data-theme="dark"] .stat,
+html[data-theme="dark"] .sumcard,html[data-theme="dark"] .msg-empty{
+  background:linear-gradient(165deg,rgba(255,255,255,.075),rgba(255,255,255,.028));
+  border-color:rgba(255,255,255,.09);box-shadow:0 18px 40px rgba(0,0,0,.45)}
+/* Higher surfaces: top bar, bottom nav, composer, searches, sidebar, menu */
+html[data-theme="dark"] .mobiletop,html[data-theme="dark"] .bottomnav,html[data-theme="dark"] .composer,
+html[data-theme="dark"] .msg-search,html[data-theme="dark"] .searchbar,html[data-theme="dark"] .sidebar{
+  background:linear-gradient(165deg,rgba(255,255,255,.09),rgba(255,255,255,.04));
+  border-color:rgba(255,255,255,.11);box-shadow:0 18px 40px rgba(0,0,0,.45)}
+html[data-theme="dark"] .langmenu{background:rgba(10,16,12,.92);border-color:rgba(255,255,255,.11)}
+html[data-theme="dark"] .rp-card{
+  background:linear-gradient(165deg,rgba(255,255,255,.075),rgba(255,255,255,.028));
+  border-color:rgba(255,255,255,.09);box-shadow:0 18px 40px rgba(0,0,0,.45)}
+/* Hero / right-rail dark card / member card / promo: deep emerald gradient + mint border + glow */
+html[data-theme="dark"] .hero,html[data-theme="dark"] .rp-dark,html[data-theme="dark"] .membercard{
+  background:linear-gradient(150deg,#0D2B1B,#081A10);border-color:rgba(74,222,128,.28);
+  box-shadow:0 22px 48px rgba(0,0,0,.5),0 0 44px rgba(34,197,94,.12);color:#F4F8F4}
+html[data-theme="dark"] .promo{background:linear-gradient(150deg,#0D2B1B,#081A10);border-color:rgba(74,222,128,.28)}
+html[data-theme="dark"] .promo p{color:#B9C8BB}
+/* Label text sitting on the emerald surfaces (was resolving to dark field colour) */
+html[data-theme="dark"] .hero .lbl,html[data-theme="dark"] .hero-grid span,
+html[data-theme="dark"] .rp-dark .lbl,html[data-theme="dark"] .rp-dark .rp-row span,
+html[data-theme="dark"] .bub.cardmsg .crow span,html[data-theme="dark"] .membercard .ms{color:#B9C8BB}
+/* Headings: crisp primary in dark */
+html[data-theme="dark"] .sechead h2,html[data-theme="dark"] .deskhead h1,
+html[data-theme="dark"] .totalhead,html[data-theme="dark"] .addform h3{color:#F4F8F4}
+/* Main CTA: green gradient + glow */
+html[data-theme="dark"] .btn.primary,html[data-theme="dark"] .savebtn,
+html[data-theme="dark"] .msg-openbtn,html[data-theme="dark"] .composer .sendbtn{
+  background:linear-gradient(135deg,#22C55E,#16A34A);color:#fff;box-shadow:0 10px 26px rgba(34,197,94,.28)}
+html[data-theme="dark"] .plusbtn,html[data-theme="dark"] .msg-plus{
+  background:linear-gradient(135deg,#22C55E,#16A34A);color:#fff;border-color:rgba(74,222,128,.55);
+  box-shadow:0 12px 28px rgba(34,197,94,.30),0 0 0 4px rgba(255,255,255,.07)}
+/* Selected nav / tabs / chips: green tint + bright green text */
+html[data-theme="dark"] .tabpill.active,html[data-theme="dark"] .tabpill[data-nav].active{
+  background:rgba(34,197,94,.18);border-color:rgba(74,222,128,.45);color:#4ADE80}
+html[data-theme="dark"] .chip.on{background:rgba(34,197,94,.18);border-color:rgba(74,222,128,.45);color:#4ADE80}
+html[data-theme="dark"] .side-nav button.active{background:rgba(34,197,94,.18);color:#4ADE80}
+html[data-theme="dark"] .side-nav button.active svg{color:#4ADE80}
+html[data-theme="dark"] .bn-in>button[data-nav].active{color:#4ADE80}
+html[data-theme="dark"] .langopt.on,html[data-theme="dark"] .langopt:hover{background:rgba(34,197,94,.18);color:#4ADE80}
+/* Sidebar / side-foot resting text */
+html[data-theme="dark"] .side-nav button,html[data-theme="dark"] .side-foot button{color:#B9C8BB}
+/* Toggle: keep UI10 treatment, token-aligned */
+html[data-theme="dark"] .toggle{background:rgba(255,255,255,.05);border-color:rgba(255,255,255,.09)}
+html[data-theme="dark"] .toggle button.on{background:#F4F8F4;color:#101410;box-shadow:0 4px 14px rgba(0,0,0,.35)}
+html[data-theme="dark"] .toggle #tg-income.on{background:linear-gradient(135deg,#22C55E,#16A34A);color:#fff}
+/* Inputs / selects / search fields */
+html[data-theme="dark"] .field input,html[data-theme="dark"] .field select,html[data-theme="dark"] .msg-atwrap,
+html[data-theme="dark"] .mnbtn{background:rgba(255,255,255,.055);border-color:rgba(255,255,255,.10);color:#F4F8F4}
+html[data-theme="dark"] input::placeholder{color:rgba(244,248,244,.35)}
+html[data-theme="dark"] select option{background:#0C130D;color:#F4F8F4}
+/* Keypad circles: card-gradient glass (geometry unchanged) */
+html[data-theme="dark"] .keypad button{
+  background:linear-gradient(165deg,rgba(255,255,255,.07),rgba(255,255,255,.03));
+  border-color:rgba(255,255,255,.10);color:#F4F8F4}
+html[data-theme="dark"] .keypad button.kp-fn{color:#8CA08D}
+@media (hover:hover) and (pointer:fine){html[data-theme="dark"] .keypad button:hover{background:rgba(255,255,255,.10)}}
+html[data-theme="dark"] .keypad button:active{background:rgba(34,197,94,.25)}
+/* Category tiles: card glass; selected = mint border + green tint */
+html[data-theme="dark"] .catcell{
+  background:linear-gradient(165deg,rgba(255,255,255,.06),rgba(255,255,255,.025));
+  border-color:rgba(255,255,255,.09);color:#B9C8BB}
+html[data-theme="dark"] .catcell.on{background:rgba(34,197,94,.16);border-color:rgba(74,222,128,.45);color:#F4F8F4}
+/* Small glass buttons / pills / chips (resting) */
+html[data-theme="dark"] .icobtn,html[data-theme="dark"] .editbtn,html[data-theme="dark"] .chat-back,
+html[data-theme="dark"] .delbtn,html[data-theme="dark"] .sharepill,html[data-theme="dark"] .langbtn,
+html[data-theme="dark"] .msg-editbtn,html[data-theme="dark"] .composer .attachbtn,html[data-theme="dark"] .btn.glassb{
+  background:linear-gradient(165deg,rgba(255,255,255,.08),rgba(255,255,255,.035));
+  border-color:rgba(255,255,255,.10);color:#B9C8BB}
+html[data-theme="dark"] .tabpill{background:rgba(255,255,255,.04);border-color:rgba(255,255,255,.09);color:#B9C8BB}
+html[data-theme="dark"] .chip{background:rgba(255,255,255,.04);border-color:rgba(255,255,255,.09);color:#B9C8BB}
+html[data-theme="dark"] .sharepill{color:#4ADE80}
+/* Chat bubbles */
+html[data-theme="dark"] .bub.them{
+  background:linear-gradient(165deg,rgba(255,255,255,.075),rgba(255,255,255,.028));
+  border-color:rgba(255,255,255,.09);color:#F4F8F4}
+html[data-theme="dark"] .bub.me{background:linear-gradient(135deg,#22C55E,#16A34A);color:#fff}
+/* Misc surfaces into the same system */
+html[data-theme="dark"] .phone-mock{
+  background:linear-gradient(165deg,rgba(255,255,255,.06),rgba(255,255,255,.025));border-color:rgba(255,255,255,.09)}
+html[data-theme="dark"] .switch{background:rgba(255,255,255,.07);border-color:rgba(255,255,255,.10)}
+
+html[data-theme="dark"] .msg-hint.err{color:#F4F8F4}
+/* Charts in dark: income bars bright emerald gradient (expense stays --exp-red #F97066) */
+html[data-theme="dark"] .bpair i.inc{background:linear-gradient(180deg,#4ADE80,#22C55E)}
+html[data-theme="dark"] .pm-bar-row i{background:linear-gradient(180deg,#4ADE80,#22C55E)}
+
+/* ============ UI10: expense red + dialer keypad zones + monthly summary + brand tiles ============ */
+.expv{color:var(--exp-red)}
+#h-spend{color:var(--exp-red)}
+#t-top .pbar i{background:var(--exp-red)}
+.addcard.exp-mode .amountbig{color:var(--exp-red)}
+.addcard.exp-mode .amountsub{color:var(--exp-red)}
+.addcard.exp-mode .savebtn{background:var(--exp-red);color:#fff}
+.add-left,.add-right{display:contents}
+@media (min-width:1024px){
+  #page-add .card{max-width:920px}
+  .addcard{display:grid;grid-template-columns:minmax(0,1fr) 300px;column-gap:30px;align-items:center}
+  .add-left{display:flex;flex-direction:column;min-width:0}
+  .add-right{display:flex;flex-direction:column;align-items:center;min-width:0}
+  .addcard .keypad{margin-top:0}
+  .add-right .savebtn{margin-top:16px}
+}
+.mnav{display:inline-flex;align-items:center;gap:8px}
+.mnbtn{width:30px;height:30px;border-radius:50%;border:1px solid var(--hair);background:var(--field-bg);color:var(--ink2);display:inline-flex;align-items:center;justify-content:center;padding:0;cursor:pointer}
+.mtitle{font-size:13.5px;font-weight:650;min-width:118px;text-align:center}
+.mstrip{margin-top:6px}
+.mrow{display:block;width:100%;text-align:left;background:none;border:none;border-top:1px solid var(--hair);padding:10px 8px;border-radius:10px;cursor:pointer;color:inherit}
+.mrow.on{background:var(--mint-glass)}
+.mrow-top{display:flex;justify-content:space-between;align-items:baseline;gap:10px}
+.mrow .mn{font-size:13.5px;font-weight:600}
+.mrow .ml{font-size:13.5px;font-weight:650}
+.mrow-sub{display:flex;gap:14px;font-size:12px;margin-top:2px;font-variant-numeric:tabular-nums}
+.rp-nm{display:inline-flex;align-items:center;gap:8px}
+.brand-tile{flex:none;width:36px;height:36px;border-radius:10px;display:inline-flex;align-items:center;justify-content:center;font-size:10px;font-weight:800;line-height:1;letter-spacing:.01em;box-shadow:inset 0 0 0 1px rgba(255,255,255,.18);color:#fff}
+.brand-tile.sm{width:26px;height:26px;border-radius:8px;font-size:7.5px}
+.brand-tile.neutral{background:var(--glass-lo);color:var(--deep);box-shadow:inset 0 0 0 1px var(--hair2)}
+.brand-tile.neutral svg{width:17px;height:17px}
+.brand-tile.logo{background:#fff;padding:0;overflow:hidden}
+.brand-tile.logo img{width:100%;height:100%;object-fit:cover;display:block}
+.brandgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(64px,1fr));gap:8px;margin-top:2px}
+.brandpick{display:flex;flex-direction:column;align-items:center;gap:5px;padding:9px 2px 7px;border-radius:14px;border:1px solid var(--hair2);background:var(--glass-lo);font-size:10.5px;font-weight:600;color:var(--ink2);cursor:pointer;font-family:inherit}
+.brandpick .brand-tile{width:44px;height:44px;border-radius:12px;font-size:11.5px}
+.brandpick .brand-tile.neutral svg{width:20px;height:20px}
+.brandpick.on{border-color:rgba(34,197,94,.55);background:var(--mint-glass);box-shadow:0 0 0 1px rgba(34,197,94,.25)}
+/* ============ UI12 Support chat ============ */
+.sup-wrap{max-width:760px;margin:0 auto}
+.sup-avatar{position:relative;flex:none;width:42px;height:42px;border-radius:12px;background:#111111;display:flex;align-items:center;justify-content:center;box-shadow:inset 0 0 0 1px rgba(255,255,255,.14)}
+.sup-avatar img{width:100%;height:100%;object-fit:cover;border-radius:12px;display:block}
+.sup-dot{position:absolute;right:-2px;bottom:-2px;width:11px;height:11px;border-radius:50%;background:#22C55E;border:2px solid #fff}
+html[data-theme="dark"] .sup-dot{border-color:#0A100C}
+.sup-shield{margin-left:auto;flex:none;color:var(--deep);display:flex;align-items:center}
+.sup-shield svg{width:20px;height:20px}
+.daydiv{display:flex;justify-content:center;margin:2px 0 10px}
+.daydiv span{font-size:11px;color:var(--muted);background:var(--glass-lo);border:1px solid var(--hair2);padding:3px 11px;border-radius:999px}
+</style>
+</head>
+<body class="lang-my">
+<script>try{var _th=localStorage.getItem('ncy_theme');if(_th==='dark'){document.documentElement.setAttribute('data-theme','dark');document.documentElement.style.colorScheme='dark';}}catch(e){}</script>
+<div id="bootload"><span class="logo-tile lg"><img src="/static/img/logo-256.png" alt="Ngwe Chay Yar"></span><span class="brandname" style="margin-left:12px">Ngwe Chay Yar</span></div>
+<div class="orb o1"></div><div class="orb o2"></div><div class="orb o3"></div>
+<div class="layout">
+
+  <!-- ============ SIDEBAR (desktop) ============ -->
+  <aside class="sidebar">
+    <div class="brandrow">
+      <span class="logo-tile"><img src="/static/img/logo-256.png" alt="Ngwe Chay Yar logo"></span>
+      <span><span class="brandname">Ngwe Chay Yar</span><br><span class="brandsub">Foot of Money</span></span>
+    </div>
+    <nav class="side-nav" id="sidenav">
+      <button data-nav="home" class="active" onclick="go('home')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M4.8 11.2L12 5l7.2 6.2M6.8 9.6V19h10.4V9.6"/></svg><span data-i18n="nav_dashboard"></span></button>
+      <button data-nav="activity" onclick="go('activity')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M4.5 4v15.5h15"/><path d="M9 16v-4.5M13.2 16V8.5M17.4 16v-6.5"/></svg><span data-i18n="activity_title"></span></button>
+      <button data-nav="message" onclick="goMessage()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 11.5a8.5 8.5 0 0 1-8.5 8.5c-1.5 0-3-.4-4.2-1.1L3 20l1.1-5.3A8.5 8.5 0 1 1 21 11.5z"/></svg><span data-i18n="nav_message"></span></button>
+      <button data-nav="accounts" onclick="go('accounts')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="3.5" y="6.5" width="17" height="12" rx="2.5"/><path d="M3.5 10.2h17M16.8 15h.01"/></svg><span data-i18n="nav_accounts"></span></button>
+      
+    </nav>
+    <div class="promo">
+      <p data-i18n="promo_text"></p>
+      <button class="btn primary" onclick="go('add')">+ <span data-i18n="add_transaction"></span></button>
+    </div>
+    <div class="side-foot">
+      <button data-nav="settings" onclick="go('settings')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M5 7h8M18.5 7H20M5 12h2.5M12 12h7M5 17h10.5M20 17h-.5"/><circle cx="15.5" cy="7" r="2"/><circle cx="9.5" cy="12" r="2"/><circle cx="17.5" cy="17" r="2"/></svg><span data-i18n="nav_settings"></span></button>
+      <button data-nav="account" onclick="go('account')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="3.6"/><path d="M5 20a7 7 0 0 1 14 0"/></svg><span data-i18n="nav_account"></span></button>
+      <button onclick="location.href='/logout'"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M14 4h-7v16h7M10.5 12H20M17 8.8L20.2 12 17 15.2"/></svg><span data-i18n="logout"></span></button>
+    </div>
+  </aside>
+
+  <!-- ============ CENTRE ============ -->
+  <div class="center">
+    <div class="mobiletop">
+      <div class="brandrow">
+        <span class="logo-tile"><img src="/static/img/logo-256.png" alt="Ngwe Chay Yar logo"></span>
+        <span><span class="brandname">Ngwe Chay Yar</span><br><span class="brandsub">Foot of Money</span></span>
+      </div>
+      <div class="iconbtns">
+        <div class="langwrap">
+          <button class="langbtn" id="langbtn-m" onclick="toggleLangMenu('m')" data-i18n-aria="language_label"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="8.6"/><path d="M3.4 12h17.2M12 3.4c2.4 2.3 3.6 5.2 3.6 8.6s-1.2 6.3-3.6 8.6c-2.4-2.3-3.6-5.2-3.6-8.6S9.6 5.7 12 3.4z"/></svg><span id="lang-cur-m">မြန်မာ</span></button>
+          <div class="langmenu" id="langmenu-m"></div>
+        </div>
+        <button class="icobtn" onclick="go('settings')" data-i18n-aria="nav_settings"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M5 7h8M18.5 7H20M5 12h2.5M12 12h7M5 17h10.5M20 17h-.5"/><circle cx="15.5" cy="7" r="2"/><circle cx="9.5" cy="12" r="2"/><circle cx="17.5" cy="17" r="2"/></svg></button>
+        <button class="icobtn" onclick="toggleTheme()" data-i18n-aria="dark_mode" aria-label="Dark Mode"><span id="theme-ico-m" style="display:flex"></span></button>
+      </div>
+    </div>
+
+    <div class="deskhead">
+      <div class="desk-toprow">
+        <h1 id="d-title">—</h1>
+        <div class="langwrap">
+          <button class="langbtn" id="langbtn-d" onclick="toggleLangMenu('d')" data-i18n-aria="language_label"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="8.6"/><path d="M3.4 12h17.2M12 3.4c2.4 2.3 3.6 5.2 3.6 8.6s-1.2 6.3-3.6 8.6c-2.4-2.3-3.6-5.2-3.6-8.6S9.6 5.7 12 3.4z"/></svg><span id="lang-cur-d">မြန်မာ</span></button>
+          <div class="langmenu" id="langmenu-d"></div>
+        </div>
+        <button class="icobtn" onclick="toggleTheme()" data-i18n-aria="dark_mode" aria-label="Dark Mode"><span id="theme-ico-d" style="display:flex"></span></button>
+      </div>
+      <div class="searchbar"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><circle cx="11" cy="11" r="6.5"/><path d="M16 16l4.5 4.5"/></svg><input id="d-search" type="text" data-i18n-ph="search_placeholder" oninput="setSearch(this.value)"></div>
+      <div class="tabrow">
+        <button class="tabpill active" data-nav="home" onclick="go('home')" data-i18n="tab_overview"></button>
+        <button class="tabpill" data-nav="activity" onclick="go('activity')" data-i18n="activity_title"></button>
+        <button class="tabpill" data-nav="message" onclick="goMessage()" data-i18n="nav_message"></button>
+        <button class="tabpill" data-nav="add" onclick="go('add')">+ <span data-i18n="add_short"></span></button>
+      </div>
+    </div>
+
+    <div class="flash" id="flash"></div>
+
+    <!-- ===== HOME ===== -->
+    <section class="page active" id="page-home">
+      <div class="dateline" id="h-dateline">—</div>
+      <div class="spendwrap">
+        <div class="lbl" data-i18n="this_month_spend"></div>
+        <div class="amt" id="h-spend">–</div>
+        <div class="vs" id="h-vs">–</div>
+      </div>
+      <div class="hero">
+        <div class="lbl" id="h-networth-label" data-i18n="net_worth"></div>
+        <div class="big" id="h-networth">–</div>
+        <div class="hero-grid">
+          <div><span data-i18n="accounts_savings"></span><b id="h-b-accounts">–</b></div>
+          <div><span data-i18n="nav_assets"></span><b id="h-b-assets">–</b></div>
+          <div><span data-i18n="debts"></span><b id="h-b-debts">–</b></div>
+        </div>
+      </div>
+      <div class="statgrid">
+        <div class="stat"><div class="sl" data-i18n="income"></div><div class="sv g" id="h-income">–</div></div>
+        <div class="stat"><div class="sl" data-i18n="expenses"></div><div class="sv expv" id="h-expense">–</div></div>
+        <div class="stat"><div class="sl" data-i18n="leftover"></div><div class="sv" id="h-leftover">–</div></div>
+        <div class="stat"><div class="sl" data-i18n="accounts"></div><div class="sv" id="h-accounts">–</div></div>
+      </div>
+      <div class="sechead"><h2 data-i18n="wallets"></h2></div>
+      <div class="listcard" id="h-wallets"></div>
+      <div class="sechead"><div class="rowbet"><h2 data-i18n="recent_transactions"></h2><button class="linkbtn" onclick="go('activity')" data-i18n="see_all"></button></div></div>
+      <div class="listcard" id="h-recent"></div>
+    </section>
+
+    <!-- ===== ACTIVITY (Analytics + Transactions combined) ===== -->
+    <section class="page" id="page-activity">
+      <div class="sechead"><h2 data-i18n="activity_title"></h2></div>
+      <div class="duo">
+        <div class="card duo-card">
+          <div class="rowbet">
+            <span class="lbl" data-i18n="monthly"></span>
+            <span class="duo-legend"><i class="legend-dot" style="background:var(--deep)"></i><span data-i18n="income"></span>&nbsp;<i class="legend-dot" style="background:var(--exp-red)"></i><span data-i18n="expenses"></span></span>
+          </div>
+          <div class="bars bars-sm" id="a-bars"></div>
+          <div style="display:flex;gap:4px" id="a-barlabs"></div>
+        </div>
+        <div class="card duo-card">
+          <div class="lbl" style="text-align:center" data-i18n="cycle_title"></div>
+          <div class="donutwrap donut-sm">
+            <svg id="c-donut" width="148" height="148" viewBox="0 0 120 120"></svg>
+            <div class="donut-centre"><div class="dl" data-i18n="leftover"></div><div class="dv" id="c-centre">–</div></div>
+          </div>
+          <div class="legend" id="c-legend"></div>
+        </div>
+      </div>
+      <div class="card sumstrip">
+        <div class="ss-cell"><div class="sl" data-i18n="income"></div><div class="sv g" id="s-income">–</div></div>
+        <div class="ss-cell"><div class="sl" data-i18n="expenses"></div><div class="sv expv" id="s-expense">–</div></div>
+        <div class="ss-cell"><div class="sl" data-i18n="leftover"></div><div class="sv" id="s-leftover">–</div></div>
+      </div>
+      <div class="card" id="monthly-card">
+        <div class="rowbet"><span class="lbl" data-i18n="monthly_summary"></span><span class="mnav"><button type="button" class="mnbtn" onclick="shiftMonth(-1)" data-i18n-aria="prev_month"><svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14.5 5.5L8 12l6.5 6.5"/></svg></button><span class="mtitle" id="m-title">–</span><button type="button" class="mnbtn" onclick="shiftMonth(1)" data-i18n-aria="next_month"><svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9.5 5.5L16 12l-6.5 6.5"/></svg></button></span></div>
+        <div class="sumstrip mstrip">
+          <div class="ss-cell"><div class="sl" data-i18n="income"></div><div class="sv g" id="m-income">–</div></div>
+          <div class="ss-cell"><div class="sl" data-i18n="expenses"></div><div class="sv expv" id="m-expense">–</div></div>
+          <div class="ss-cell"><div class="sl" data-i18n="leftover"></div><div class="sv" id="m-leftover">–</div></div>
+        </div>
+        <div id="m-rows"></div>
+      </div>
+      <div class="card">
+        <div class="lbl" style="margin-bottom:4px" data-i18n="top_spending"></div>
+        <div id="t-top"></div>
+      </div>
+      <div class="sechead"><div class="rowbet"><h2 data-i18n="all_transactions"></h2><button class="linkbtn" onclick="go('add')">+ <span data-i18n="add_short"></span></button></div></div>
+      <div id="t-list"></div>
+      <div class="card">
+        <div class="lbl" style="margin-bottom:10px" data-i18n="net_worth_breakdown"></div>
+        <div id="a-breakdown"></div>
+      </div>
+    </section>
+
+
+    <!-- ===== MESSAGE (UI7) ===== -->
+    <section class="page" id="page-message">
+      <div class="sechead"><h2 data-i18n="nav_message"></h2></div>
+      <div id="msg-root"></div>
+    </section>
+
+    <!-- ===== ADD ===== -->
+    <section class="page" id="page-add">
+      <div class="sechead"><h2 id="add-title"></h2></div>
+      <div class="card addcard" id="addcard">
+        <div class="add-left">
+        <div class="toggle">
+          <button id="tg-expense" class="on" onclick="setKind('expense')" data-i18n="expenses"></button>
+          <button id="tg-income" onclick="setKind('income')" data-i18n="income"></button>
+        </div>
+        <div class="amtrow"><div class="amountbig" id="add-amount">0</div><div class="amountsub"><span data-i18n="enter_amount"></span></div></div>
+        <div class="lbl addcat-lbl" data-i18n="select_category"></div>
+        <div class="catgrid" id="add-catgrid"></div>
+        <div class="daterow">
+          <div class="field date-f"><label data-i18n="date_label"></label><input type="date" id="add-date"></div>
+          <div class="field note-f"><label data-i18n="note_optional"></label><input type="text" id="add-note" data-i18n-ph="note_placeholder"></div>
+        </div>
+        </div>
+        <div class="add-right">
+        <div class="keypad" id="keypad">
+          <button onclick="keyPress('1')">1</button><button onclick="keyPress('2')">2</button><button onclick="keyPress('3')">3</button>
+          <button onclick="keyPress('4')">4</button><button onclick="keyPress('5')">5</button><button onclick="keyPress('6')">6</button>
+          <button onclick="keyPress('7')">7</button><button onclick="keyPress('8')">8</button><button onclick="keyPress('9')">9</button>
+          <button class="kp-fn" onclick="keyPress('000')">000</button><button onclick="keyPress('0')">0</button><button class="kp-fn" onclick="keyPress('back')" data-i18n-aria="backspace"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-4px"><path d="M9 5.5h10.5v13H9L3.8 12z"/><path d="M12 9.5l5 5M17 9.5l-5 5"/></svg></button>
+        </div>
+        <button class="savebtn" id="add-save" onclick="saveAdd()"></button>
+        </div>
+      </div>
+    </section>
+
+    <!-- ===== SUPPORT ===== -->
+    <section class="page" id="page-support">
+      <div class="sup-wrap">
+        <div class="chat-head">
+          <button class="chat-back" onclick="go('account')" data-i18n-aria="msg_back"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M14.8 5.5L8.3 12l6.5 6.5"/></svg></button>
+          <span class="sup-avatar"><img id="sup-logo" alt="Ngwe Chay Yar"><span class="sup-dot"></span></span>
+          <span class="tm"><span class="pn" data-i18n="support_title"></span><span class="pu"><span class="chat-online" data-i18n="support_online"></span> · <span data-i18n="support_sub"></span></span></span>
+          <span class="sup-shield"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3l7 2.6v5.2c0 4.6-3 7.6-7 9.2-4-1.6-7-4.6-7-9.2V5.6z"/><path d="M9.3 12l2 2 3.6-3.8"/></svg></span>
+        </div>
+        <div class="daydiv"><span id="sup-date"></span></div>
+        <div class="bubbles" id="sup-msgs"></div>
+        <div class="composer">
+          <button class="attachbtn" onclick="triggerSupAttach()" data-i18n-aria="msg_attach"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M20.5 11.8l-8.6 8.6a5.3 5.3 0 0 1-7.5-7.5l8.9-8.9a3.5 3.5 0 0 1 5 5l-8.6 8.6a1.8 1.8 0 0 1-2.5-2.5l7.9-7.9"/></svg></button>
+          <input type="file" id="sup-file" style="display:none" accept="image/*,video/*,.pdf,.doc,.docx,.txt,.zip" onchange="onSupAttach(this)">
+          <input type="text" id="sup-input" data-i18n-ph="support_ph" onkeydown="supKey(event)">
+          <button class="sendbtn" onclick="sendSupport()" data-i18n-aria="msg_send"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M20.5 3.5L10.2 13.8M20.5 3.5L14 20.5l-3.8-6.7L3.5 10z"/></svg></button>
+        </div>
+        <div class="attach-note" data-i18n="support_hint"></div>
+      </div>
+    </section>
+
+    <!-- ===== ACCOUNT ===== -->
+    <section class="page" id="page-account">
+      <div class="sechead"><h2 data-i18n="nav_account"></h2></div>
+      <div class="card profhead">
+        <span class="avatar" id="ac-avatar" onclick="triggerProfilePhoto()"></span>
+        <span><b id="ac-name" style="font-size:16px;font-weight:650;letter-spacing:-.01em"></b><br><small id="ac-email" class="muted"></small></span>
+        <button class="editbtn" onclick="toggleProfileForm()" data-i18n="edit"></button>
+      </div>
+      <form class="card" id="profile-form" style="display:none" onsubmit="return saveProfile(event)">
+        <div class="lbl" style="margin-bottom:2px" data-i18n="edit_profile"></div>
+        <div class="photorow"><button class="btn glassb" type="button" onclick="triggerProfilePhoto()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M4 8h2.2l1.6-2.4h8.4L17.8 8H20a1.5 1.5 0 0 1 1.5 1.5V18A1.5 1.5 0 0 1 20 19.5H4A1.5 1.5 0 0 1 2.5 18V9.5A1.5 1.5 0 0 1 4 8z"/><circle cx="12" cy="13" r="3.4"/></svg><span data-i18n="change_photo"></span></button><button class="btn glassb" type="button" id="pf-remove-photo" style="display:none" onclick="removeProfilePhoto()" data-i18n="remove_photo"></button><input type="file" id="pf-photo-file" style="display:none" accept="image/*" onchange="onProfilePhotoPick(this)"></div>
+        <div class="field"><label data-i18n="first_name"></label><input type="text" id="pf-first"></div>
+        <div class="field"><label data-i18n="last_name"></label><input type="text" id="pf-last"></div>
+        <div class="field"><label data-i18n="email_label"></label><input type="email" id="pf-email" placeholder="you@example.com" readonly></div>
+        <button class="btn primary" type="submit" data-i18n="save_profile"></button>
+      </form>
+      <div class="membercard">
+        <span class="logo-tile"><img src="/static/img/logo-256.png" alt="Ngwe Chay Yar logo"></span>
+        <span><span class="mt">Ngwe Chay Yar</span><div class="ms">Foot of Money · <span data-i18n="member_sub"></span></div></span>
+      </div>
+      <div class="card menu">
+        <button onclick="toggleProfileForm()"><span class="chip-ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="3.6"/><path d="M5 20a7 7 0 0 1 14 0"/></svg></span><span data-i18n="account_information"></span><span class="arr"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M9.5 6l6 6-6 6"/></svg></span></button>
+        <button onclick="go('accounts')"><span class="chip-ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="3.5" y="6.5" width="17" height="12" rx="2.5"/><path d="M3.5 10.2h17M16.8 15h.01"/></svg></span><span data-i18n="nav_accounts"></span><span class="arr"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M9.5 6l6 6-6 6"/></svg></span></button>
+        <button onclick="go('assets')"><span class="chip-ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M4.8 11.2L12 5l7.2 6.2M6.8 9.6V19h10.4V9.6"/></svg></span><span data-i18n="nav_assets"></span><span class="arr"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M9.5 6l6 6-6 6"/></svg></span></button>
+        <button onclick="go('assets')"><span class="chip-ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="3.5" y="6" width="17" height="12" rx="2.5"/><path d="M3.5 10h17"/></svg></span><span data-i18n="debts"></span><span class="arr"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M9.5 6l6 6-6 6"/></svg></span></button>
+        <button onclick="go('settings')"><span class="chip-ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M5 7h8M18.5 7H20M5 12h2.5M12 12h7M5 17h10.5M20 17h-.5"/><circle cx="15.5" cy="7" r="2"/><circle cx="9.5" cy="12" r="2"/><circle cx="17.5" cy="17" r="2"/></svg></span><span data-i18n="nav_settings"></span><span class="arr"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M9.5 6l6 6-6 6"/></svg></span></button>
+        <button onclick="go('support')"><span class="chip-ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="8.6"/><path d="M9.6 9.4A2.6 2.6 0 0 1 12 7.9c1.4 0 2.5 1 2.5 2.2 0 1.7-2.4 1.9-2.4 3.4M12 16.9h.01"/></svg></span><span data-i18n="help_support"></span><span class="arr"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M9.5 6l6 6-6 6"/></svg></span></button>
+        <button onclick="go('settings')"><span class="chip-ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="8.6"/><path d="M12 11v5M12 7.8h.01"/></svg></span><span data-i18n="about"></span><span class="arr"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M9.5 6l6 6-6 6"/></svg></span></button>
+      </div>
+    </section>
+
+    <!-- ===== ACCOUNTS ===== -->
+    <section class="page" id="page-accounts">
+      <div class="sechead"><h2 data-i18n="nav_accounts"></h2></div>
+      <div class="card">
+        <div class="totalhead" id="a-total">–</div>
+        <div id="a-list"></div>
+        <form class="addform" onsubmit="return addAccount(event)">
+          <h3 data-i18n="add_account_saving"></h3>
+          <div class="field" style="margin-bottom:2px"><label data-i18n="choose_app"></label><div class="brandgrid" id="ac-brandgrid"></div></div>
+          <div class="field"><label data-i18n="name_label"></label><input id="ac-name-in" type="text" required data-i18n-ph="ph_account_name"></div>
+          <div class="field"><label data-i18n="type_label"></label><select id="ac-type-in"><option value="cash"></option><option value="bank"></option><option value="ewallet"></option><option value="savings"></option></select></div>
+          <div class="field"><label data-i18n="balance_label"></label><input id="ac-bal-in" type="number" min="0" required placeholder="0"></div>
+          <div class="field"><label data-i18n="note_label"></label><input id="ac-note-in" type="text" data-i18n-ph="optional_word"></div>
+          <button class="btn primary" type="submit" data-i18n="add_account"></button>
+        </form>
+      </div>
+      <p class="muted" style="font-size:13px;line-height:1.7" data-i18n="limitation_note"></p>
+    </section>
+
+    <!-- ===== ASSETS + DEBTS ===== -->
+    <section class="page" id="page-assets">
+      <div class="sechead"><h2 data-i18n="nav_assets"></h2></div>
+      <div class="card">
+        <div class="totalhead" id="as-total">–</div>
+        <div id="as-list"></div>
+        <form class="addform" onsubmit="return addAsset(event)">
+          <h3 data-i18n="add_asset_title"></h3>
+          <div class="field"><label data-i18n="name_label"></label><input id="as-name-in" type="text" required data-i18n-ph="ph_asset_name"></div>
+          <div class="field"><label data-i18n="type_label"></label><select id="as-type-in"><option value="House"></option><option value="Land"></option><option value="Condo"></option><option value="Gold"></option><option value="Other"></option></select></div>
+          <div class="field"><label data-i18n="purchase_price_label"></label><input id="as-buy-in" type="number" min="0" placeholder="0"></div>
+          <div class="field"><label data-i18n="current_value_label"></label><input id="as-value-in" type="number" min="0" required placeholder="0"></div>
+          <div class="field"><label data-i18n="location_note_label"></label><input id="as-loc-in" type="text" data-i18n-ph="optional_word"></div>
+          <button class="btn primary" type="submit" data-i18n="add_asset"></button>
+        </form>
+      </div>
+      <div class="card">
+        <div class="totalhead" id="db-total">–</div>
+        <div id="db-list"></div>
+        <form class="addform" onsubmit="return addDebt(event)">
+          <h3 data-i18n="add_debt"></h3>
+          <div class="field"><label data-i18n="name_label"></label><input id="db-name-in" type="text" required data-i18n-ph="ph_debt_name"></div>
+          <div class="field"><label data-i18n="amount_label"></label><input id="db-amt-in" type="number" min="0" required placeholder="0"></div>
+          <button class="btn primary" type="submit" data-i18n="add_debt"></button>
+        </form>
+      </div>
+    </section>
+
+    <!-- ===== SETTINGS ===== -->
+    <section class="page" id="page-settings">
+      <div class="sechead"><h2 data-i18n="nav_settings"></h2></div>
+      <div class="card">
+        <div class="brandrow">
+          <span class="logo-tile lg"><img src="/static/img/logo-256.png" alt="Ngwe Chay Yar logo"></span>
+          <span><span class="brandname" style="font-size:18px">Ngwe Chay Yar</span><br><span class="brandsub">Foot of Money</span></span>
+        </div>
+      </div>
+      <div class="card">
+        <div class="lbl" style="margin-bottom:8px" data-i18n="language_label"></div>
+        <div id="settings-lang"></div>
+      </div>
+      <div class="card">
+        <div class="rowbet"><span style="font-size:14px;font-weight:550" data-i18n="dark_mode"></span><button class="switch" id="theme-switch" onclick="toggleTheme()" data-i18n-aria="dark_mode" aria-label="Dark Mode"><span class="knob"></span></button></div>
+      </div>
+      <div class="card">
+        <div class="lbl" style="margin-bottom:8px" data-i18n="nav_message"></div>
+        <div id="settings-msg"></div>
+      </div>
+      <div class="card">
+        <div class="lbl" style="margin-bottom:6px" id="settings-help-title"></div>
+        <p class="muted" style="line-height:1.7;margin:4px 0 14px;font-size:13.5px" data-i18n="about_text"></p>
+        <button class="btn glassb" onclick="resetData()" data-i18n="reset_sample"></button>
+      </div>
+    </section>
+  </div>
+
+  <!-- ============ RIGHT PANEL (desktop) ============ -->
+  <aside class="rightpanel">
+    <div class="rp-dark">
+      <div class="lbl" data-i18n="net_worth"></div>
+      <div class="big" id="r-networth">–</div>
+      <div style="margin-top:12px">
+        <div class="rp-row"><span data-i18n="accounts"></span><b id="r-accounts-v">–</b></div>
+        <div class="rp-row"><span data-i18n="nav_assets"></span><b id="r-assets-v">–</b></div>
+        <div class="rp-row"><span data-i18n="debts"></span><b id="r-debts-v">–</b></div>
+      </div>
+    </div>
+    <div class="rp-card">
+      <div class="rowbet"><b style="font-size:14.5px;font-weight:650" data-i18n="accounts"></b><button class="linkbtn" onclick="go('accounts')" data-i18n="manage"></button></div>
+      <div id="r-accounts"></div>
+    </div>
+    <div class="rp-card">
+      <b style="font-size:14.5px;font-weight:650" data-i18n="app_preview"></b>
+      <p class="muted" style="font-size:12.5px;margin:6px 0 12px;line-height:1.6" data-i18n="app_preview_text"></p>
+      <div class="phone-mock">
+        <div class="brandrow">
+          <span class="logo-tile" style="width:34px;height:34px;border-radius:10px"><img src="/static/img/logo-256.png" alt="Ngwe Chay Yar logo"></span>
+          <span><b style="font-size:13px;font-weight:650">Ngwe Chay Yar</b><br><span class="brandsub" style="font-size:8.5px">Foot of Money</span></span>
+        </div>
+        <div class="pm-line g" style="width:55%"></div>
+        <div class="pm-line" style="width:85%"></div>
+        <div class="pm-line" style="width:70%"></div>
+        <div class="pm-bar-row"><i style="height:38%"></i><i class="l" style="height:60%"></i><i style="height:48%"></i><i class="l" style="height:78%"></i><i style="height:64%"></i><i class="l" style="height:92%"></i></div>
+      </div>
+    </div>
+  </aside>
+</div>
+
+<!-- ============ FLOATING GLASS BOTTOM NAV (mobile) ============ -->
+<nav class="bottomnav"><div class="bn-in">
+  <button data-nav="home" class="active" onclick="go('home')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M4.8 11.2L12 5l7.2 6.2M6.8 9.6V19h10.4V9.6"/></svg><span data-i18n="nav_home"></span></button>
+  <button data-nav="activity" onclick="go('activity')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M4.5 4v15.5h15"/><path d="M9 16v-4.5M13.2 16V8.5M17.4 16v-6.5"/></svg><span data-i18n="nav_activity"></span></button>
+  <button class="plusbtn" onclick="go('add')" data-i18n-aria="add_transaction"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg></button>
+  <button data-nav="message" onclick="goMessage()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 11.5a8.5 8.5 0 0 1-8.5 8.5c-1.5 0-3-.4-4.2-1.1L3 20l1.1-5.3A8.5 8.5 0 1 1 21 11.5z"/></svg><span data-i18n="nav_message"></span></button>
+  <button data-nav="account" onclick="go('account')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="3.6"/><path d="M5 20a7 7 0 0 1 14 0"/></svg><span data-i18n="nav_account"></span></button>
+</div></nav>
+
+<script>
+var STRINGS = {"en": {"dark_mode": "Dark Mode", "nav_dashboard": "Dashboard", "nav_transactions": "Transactions", "nav_analytics": "Analytics", "activity_title": "Analytics & Transactions", "nav_activity": "Activity", "cycle_title": "Income & Expense Cycle", "nav_accounts": "Accounts & Wallets", "nav_assets": "Real Estate & Assets", "nav_settings": "Settings", "nav_account": "Account", "nav_home": "Home", "add_transaction": "Add Transaction", "add_short": "Add", "tab_overview": "Overview", "search_placeholder": "Search transactions, categories…", "promo_text": "Track all your money in one place — expenses, savings and property.", "logout": "Log out", "this_month_spend": "This Month Spend", "net_worth": "Total Net Worth", "accounts_savings": "Accounts / Savings", "debts": "Debts", "income": "Income", "leftover": "Leftover", "accounts": "Accounts", "wallets": "Wallets", "recent_transactions": "Recent Transactions", "see_all": "See All", "spending_wallet": "Spending Wallet", "wallet_total_sub": "All accounts total", "vs_below": "{v}% below last month", "vs_above": "{v}% above last month", "first_month": "First month on record — no last-month comparison yet", "no_transactions_yet": "No transactions yet", "no_accounts": "No accounts", "expense_total": "Expense Total", "this_month": "this month", "top_spending": "Top Spending", "all_transactions": "All Transactions", "no_expenses_month": "No expenses this month", "no_spending_month": "No spending yet this month", "no_transactions_found": "No transactions found", "delete_label": "Delete", "delete_confirm": "Delete this entry?", "deleted": "Deleted", "monthly": "Monthly", "monthly_summary": "Monthly Summary", "prev_month": "Previous month", "next_month": "Next month", "choose_app": "Choose app", "income_this_month": "Income — this month", "expenses_this_month": "Expenses — this month", "net_worth_breakdown": "Net Worth Breakdown", "history": "History", "no_history": "No history yet", "add_expense": "Add Expense", "add_income": "Add Income", "expenses": "Expenses", "enter_amount": "Enter Amount", "select_category": "Select Category", "date_label": "Date", "note_optional": "Note (optional)", "note_placeholder": "e.g. Lunch, Taxi, Salary", "backspace": "Backspace", "please_enter_amount": "Please enter an amount", "saved": "Saved", "cat_food": "Food", "cat_transport": "Transport", "cat_bills": "Bills", "cat_shopping": "Shopping", "cat_health": "Health", "cat_entertainment": "Entertainment", "cat_education": "Education", "cat_other": "Other", "cat_salary": "Salary", "cat_business": "Business", "cat_freelance": "Freelance", "cat_investment": "Investment", "edit": "Edit", "edit_profile": "Edit profile", "first_name": "First name", "last_name": "Last name", "email_label": "Email", "save_profile": "Save profile", "profile_saved": "Profile saved", "member_sub": "all your finances in one place", "account_information": "Account Information", "help_support": "Help & Support", "about": "About", "total_label": "Total", "add_account_saving": "Add account / Saving", "name_label": "Name", "type_label": "Type", "balance_label": "Balance", "note_label": "Note", "optional_word": "Optional", "add_account": "Add account", "ph_account_name": "e.g. Cash, KBZ Pay, Bank", "type_cash": "Cash", "type_bank": "Bank", "type_ewallet": "E-Wallet", "type_savings": "Savings", "limitation_note": "Note: like the real MVP, account balances are stored amounts — adding a transaction does not auto-change an account balance.", "account_added": "Account added", "no_accounts_yet": "No accounts yet", "total_current_value": "Total current value", "add_asset_title": "Add real estate / asset", "purchase_price_label": "Purchase price", "current_value_label": "Current value", "location_note_label": "Location / note", "ph_asset_name": "e.g. Land, House", "add_asset": "Add asset", "asset_added": "Asset added", "no_assets_yet": "No assets yet", "bought_label": "Bought", "pl_label": "P/L", "type_house": "House", "type_land": "Land", "type_condo": "Condo", "type_gold": "Gold", "add_debt": "Add debt", "ph_debt_name": "Debt name", "amount_label": "Amount", "debt_added": "Debt added", "no_debts": "No debts", "language_label": "Language", "about_text": "Ngwe Chay Yar helps you track daily expenses, monthly income and spending, savings and real estate — and see your total net worth in one place.", "reset_sample": "Reset all data", "reset_confirm": "Reset all data back to the starting data?", "sample_reset": "Data reset", "app_preview": "Mobile App", "app_preview_text": "How Ngwe Chay Yar looks on a phone.", "manage": "Manage", "nav_message": "Message", "msg_need_username": "You need to create a username first to use this option", "msg_gate_sub": "Share your daily costs with your partner, keep each other updated, and plan your money together — right here.", "msg_create_username": "Create username", "msg_username_label": "Username", "msg_username_ph": "e.g. my_name", "msg_display_name": "Display name", "msg_username_hint": "3–20 characters — lowercase letters (a–z), numbers or _ only", "msg_err_invalid": "Use 3–20 characters: lowercase letters, numbers or underscore only", "msg_err_taken": "This username is already taken", "msg_available": "This username is available", "msg_created": "Username created", "msg_people": "People", "msg_results": "Results", "msg_search_ph": "Search by username", "msg_no_results": "No people found", "msg_conversations": "Chats", "msg_no_chats": "No conversations yet — search for a username to start one", "msg_online": "Online", "msg_attach": "Attach a photo, video or file", "msg_type_ph": "Type a message…", "msg_send": "Send", "msg_file_label": "File", "msg_attach_note": "Photos and videos are shown in this session only.", "msg_demo_reply": "Thanks for sharing!", "msg_share_cost": "Share today's costs", "msg_today_costs": "Today's costs", "msg_your_username": "Your username", "msg_edit_username": "Edit username", "msg_save_username": "Save username", "msg_partner": "Partner", "msg_attach_session": "Attachment — from an earlier session", "msg_back": "Back", "msg_select_chat": "Select a conversation", "support_title": "Ngwe Chay Yar Support", "support_online": "Online", "support_sub": "Help with your account, expenses & the app", "support_greeting": "Hello! How can we help you today?", "support_ph": "Message Ngwe Chay Yar Support…", "support_hint": "Photos, videos and documents up to 10 MB can be attached.", "support_reply": "Thanks for contacting us — an admin will reply here shortly.", "change_photo": "Change photo", "remove_photo": "Remove photo"}, "my": {"dark_mode": "အမှောင် ပုံစံ", "nav_dashboard": "ပင်မစာမျက်နှာ", "nav_transactions": "ငွေစာရင်း", "nav_analytics": "ခွဲခြမ်းစိတ်ဖြာချက်", "activity_title": "ခွဲခြမ်းစိတ်ဖြာမှုနှင့် ငွေစာရင်းများ", "nav_activity": "လှုပ်ရှားမှု", "cycle_title": "ဝင်ငွေနှင့် အသုံးစရိတ် လည်ပတ်မှု", "nav_accounts": "အကောင့်နှင့် ပိုက်ဆံအိတ်များ", "nav_assets": "အိမ်ခြံမြေနှင့် ပိုင်ဆိုင်မှုများ", "nav_settings": "ဆက်တင်", "nav_account": "အကောင့်", "nav_home": "ပင်မ", "add_transaction": "ငွေစာရင်း ထည့်ရန်", "add_short": "ထည့်ရန်", "tab_overview": "အကျဉ်းချုပ်", "search_placeholder": "ငွေစာရင်း၊ အမျိုးအစားများ ရှာရန်…", "promo_text": "သင့်ငွေကြေး အားလုံးကို တစ်နေရာတည်းတွင် — အသုံးစရိတ်၊ ငွေစုခြင်းနှင့် အိမ်ခြံမြေ။", "logout": "ထွက်ရန်", "this_month_spend": "ဒီလ အသုံးစရိတ်", "net_worth": "စုစုပေါင်း ပိုင်ဆိုင်မှု", "accounts_savings": "အကောင့် / ငွေစုခြင်း", "debts": "အကြွေးများ", "income": "ဝင်ငွေ", "leftover": "ကျန်ငွေ", "accounts": "အကောင့်များ", "wallets": "ပိုက်ဆံအိတ်များ", "recent_transactions": "လတ်တလော ငွေစာရင်းများ", "see_all": "အားလုံး ကြည့်ရန်", "spending_wallet": "အသုံးစရိတ် ပိုက်ဆံအိတ်", "wallet_total_sub": "အကောင့်အားလုံး စုစုပေါင်း", "vs_below": "ပြီးခဲ့သည့်လထက် {v}% လျော့နည်း", "vs_above": "ပြီးခဲ့သည့်လထက် {v}% ပိုများ", "first_month": "ပထမဆုံး မှတ်တမ်းလ — ပြီးခဲ့သည့်လနှင့် နှိုင်းယှဉ်ချက် မရှိသေးပါ", "no_transactions_yet": "ငွေစာရင်း မရှိသေးပါ", "no_accounts": "အကောင့် မရှိပါ", "expense_total": "ထွက်ငွေ စုစုပေါင်း", "this_month": "ဤလ", "top_spending": "အများဆုံး အသုံးစရိတ်များ", "all_transactions": "ငွေစာရင်း အားလုံး", "no_expenses_month": "ဤလတွင် ထွက်ငွေ မရှိပါ", "no_spending_month": "ဤလတွင် အသုံးစရိတ် မရှိသေးပါ", "no_transactions_found": "ငွေစာရင်း မတွေ့ပါ", "delete_label": "ဖျက်ရန်", "delete_confirm": "ဤစာရင်းကို ဖျက်မှာ သေချာပါသလား?", "deleted": "ဖျက်ပြီးပါပြီ", "monthly": "လစဉ်", "monthly_summary": "လစဉ် အနှစ်ချုပ်", "prev_month": "ယခင်လ", "next_month": "နောက်လ", "choose_app": "App ရွေးရန်", "income_this_month": "ဝင်ငွေ — ဤလ", "expenses_this_month": "ထွက်ငွေ — ဤလ", "net_worth_breakdown": "ပိုင်ဆိုင်မှု ခွဲခြမ်းချက်", "history": "မှတ်တမ်း", "no_history": "မှတ်တမ်း မရှိသေးပါ", "add_expense": "အသုံးစရိတ် ထည့်ရန်", "add_income": "ဝင်ငွေ ထည့်ရန်", "expenses": "အသုံးစရိတ်များ", "enter_amount": "ပမာဏ ထည့်ပါ", "select_category": "အမျိုးအစား ရွေးရန်", "date_label": "ရက်စွဲ", "note_optional": "မှတ်ချက် (ထည့်လိုက ထည့်နိုင်သည်)", "note_placeholder": "ဥပမာ — နေ့လည်စာ၊ တက္ကစီ၊ လစာ", "backspace": "နောက်သို့ ဖျက်ရန်", "please_enter_amount": "ပမာဏ ထည့်ပါ", "saved": "သိမ်းပြီးပါပြီ", "cat_food": "အစားအစာ", "cat_transport": "သယ်ယူပို့ဆောင်ရေး", "cat_bills": "ဘေလ်များ", "cat_shopping": "စျေးဝယ်ခြင်း", "cat_health": "ကျန်းမာရေး", "cat_entertainment": "ဖျော်ဖြေရေး", "cat_education": "ပညာရေး", "cat_other": "အခြား", "cat_salary": "လစာ", "cat_business": "စီးပွားရေး", "cat_freelance": "အလွတ်တန်း လုပ်ငန်း", "cat_investment": "ရင်းနှီးမြှုပ်နှံမှု", "edit": "ပြင်ရန်", "edit_profile": "ကိုယ်ရေးအချက်အလက် ပြင်ရန်", "first_name": "အမည်ရင်း", "last_name": "မျိုးနွယ်အမည်", "email_label": "အီးမေးလ်", "save_profile": "သိမ်းရန်", "profile_saved": "သိမ်းပြီးပါပြီ", "member_sub": "သင့်ငွေကြေး အားလုံးကို တစ်နေရာတည်းတွင်", "account_information": "အကောင့် အချက်အလက်များ", "help_support": "အကူအညီနှင့် ပံ့ပိုးမှု", "about": "အကြောင်း", "total_label": "စုစုပေါင်း", "add_account_saving": "အကောင့် / ငွေစုခြင်း ထည့်ရန်", "name_label": "အမည်", "type_label": "အမျိုးအစား", "balance_label": "လက်ကျန်ငွေ", "note_label": "မှတ်ချက်", "optional_word": "ထည့်လိုက ထည့်နိုင်သည်", "add_account": "အကောင့် ထည့်ရန်", "ph_account_name": "ဥပမာ — Cash, KBZ Pay, Bank", "type_cash": "ငွေသား", "type_bank": "ဘဏ်", "type_ewallet": "အီးပိုက်ဆံအိတ်", "type_savings": "ငွေစုခြင်း", "limitation_note": "မှတ်ချက် — အစစ် MVP ကဲ့သို့ပင် အကောင့် လက်ကျန်ငွေများသည် သိမ်းဆည်းထားသော ပမာဏများ ဖြစ်ပါသည်။ ငွေစာရင်း ထည့်ရုံဖြင့် အကောင့် လက်ကျန်ငွေ အလိုအလျောက် မပြောင်းပါ။", "account_added": "အကောင့် ထည့်ပြီးပါပြီ", "no_accounts_yet": "အကောင့် မရှိသေးပါ", "total_current_value": "လက်ရှိ တန်ဖိုး စုစုပေါင်း", "add_asset_title": "အိမ်ခြံမြေ / ပိုင်ဆိုင်မှု ထည့်ရန်", "purchase_price_label": "ဝယ်ယူခဲ့သည့် ဈေး", "current_value_label": "လက်ရှိ တန်ဖိုး", "location_note_label": "တည်နေရာ / မှတ်ချက်", "ph_asset_name": "ဥပမာ — မြေ၊ အိမ်", "add_asset": "ပိုင်ဆိုင်မှု ထည့်ရန်", "asset_added": "ပိုင်ဆိုင်မှု ထည့်ပြီးပါပြီ", "no_assets_yet": "ပိုင်ဆိုင်မှု မရှိသေးပါ", "bought_label": "ဝယ်ဈေး", "pl_label": "အမြတ်/အရှုံး", "type_house": "အိမ်", "type_land": "မြေ", "type_condo": "ကွန်ဒို", "type_gold": "ရွှေ", "add_debt": "အကြွေး ထည့်ရန်", "ph_debt_name": "အကြွေး အမည်", "amount_label": "ပမာဏ", "debt_added": "အကြွေး ထည့်ပြီးပါပြီ", "no_debts": "အကြွေး မရှိပါ", "language_label": "ဘာသာစကား", "about_text": "Ngwe Chay Yar သည် နေ့စဉ် အသုံးစရိတ်၊ လစဉ် ဝင်ငွေနှင့် အသုံးစရိတ်၊ ငွေစုခြင်းနှင့် အိမ်ခြံမြေတို့ကို မှတ်တမ်းတင်ရန် ကူညီပေးပြီး သင်၏ စုစုပေါင်း ပိုင်ဆိုင်မှုကို တစ်နေရာတည်းတွင် မြင်နိုင်ပါသည်။", "reset_sample": "data အားလုံး ပြန်စရန်", "reset_confirm": "data အားလုံးကို မူလ data အဖြစ် ပြန်စမှာ သေချာပါသလား?", "sample_reset": "data ပြန်စပြီးပါပြီ", "app_preview": "မိုဘိုင်း အက်ပ်", "app_preview_text": "Ngwe Chay Yar ကို ဖုန်းတွင် မည်သို့ မြင်ရမည်။", "manage": "စီမံရန်", "nav_message": "မက်ဆေ့ချ်", "msg_need_username": "ဒီ feature ကို သုံးဖို့ username အရင် ဖန်တီးရပါမယ်", "msg_gate_sub": "သင့်ရဲ့ နေ့စဉ် အသုံးစရိတ်ကို partner နဲ့ မျှဝေပြီး အပြန်အလှန် အသိပေးကာ ငွေကြေးကို အတူတကွ စီမံနိုင်ပါတယ်", "msg_create_username": "Username ဖန်တီးရန်", "msg_username_label": "Username", "msg_username_ph": "ဥပမာ my_name", "msg_display_name": "ပြသမည့် နာမည်", "msg_username_hint": "စာလုံး ၃–၂၀ လုံး — အင်္ဂလိပ် စာလုံးအသေး (a–z), ဂဏန်း သို့မဟုတ် _ သာ", "msg_err_invalid": "စာလုံး ၃–၂၀ လုံး, a–z / 0–9 / _ သာ သုံးပါ", "msg_err_taken": "ဒီ username ကို ယူပြီးသား ဖြစ်နေပါတယ်", "msg_available": "ဒီ username သုံးလို့ ရပါတယ်", "msg_created": "Username ဖန်တီးပြီးပါပြီ", "msg_people": "လူများ", "msg_results": "ရှာဖွေမှုရလဒ်", "msg_search_ph": "Username ဖြင့် ရှာရန်", "msg_no_results": "ရှာမတွေ့ပါ", "msg_conversations": "စကားပြောမှုများ", "msg_no_chats": "စကားပြောမှု မရှိသေးပါ — username ရှာပြီး စတင်ပါ", "msg_online": "လိုင်းပေါ်တွင်", "msg_attach": "ဓာတ်ပုံ, ဗီဒီယို သို့မဟုတ် ဖိုင် ပူးတွဲရန်", "msg_type_ph": "မက်ဆေ့ချ် ရိုက်ပါ…", "msg_send": "ပို့ရန်", "msg_file_label": "ဖိုင်", "msg_attach_note": "ဓာတ်ပုံနှင့် ဗီဒီယိုများကို ဒီ session မှာပဲ မြင်ရပါတယ်", "msg_demo_reply": "မျှဝေပေးတာ ကျေးဇူးပါ!", "msg_share_cost": "ဒီနေ့ အသုံးစရိတ် မျှဝေရန်", "msg_today_costs": "ဒီနေ့ အသုံးစရိတ်", "msg_your_username": "သင့် username", "msg_edit_username": "Username ပြင်ရန်", "msg_save_username": "Username သိမ်းရန်", "msg_partner": "ပါတနာ", "msg_attach_session": "ပူးတွဲဖိုင် — အရင် session က ပို့ခဲ့သည်", "msg_back": "နောက်သို့", "msg_select_chat": "စကားပြောမှုတစ်ခု ရွေးပါ", "support_title": "Ngwe Chay Yar Support", "support_online": "အွန်လိုင်း", "support_sub": "သင့်အကောင့်၊ အသုံးစရိတ်နှင့် app အတွက် အကူအညီ", "support_greeting": "မင်္ဂလာပါ! ဒီနေ့ ဘာကူညီပေးရမလဲ?", "support_ph": "Ngwe Chay Yar Support သို့ စာပို့ရန်…", "support_hint": "ဓာတ်ပုံ၊ ဗီဒီယိုနှင့် စာရွက်စာတမ်းများကို 10 MB အထိ ပူးတွဲနိုင်ပါသည်။", "support_reply": "ဆက်သွယ်ပေးတာ ကျေးဇူးပါ — admin က မကြာခင် ဒီမှာပဲ ပြန်ဖြေပေးပါမယ်။", "change_photo": "ဓာတ်ပုံ ပြောင်းရန်", "remove_photo": "ဓာတ်ပုံ ဖယ်ရှားရန်"}, "zh": {"dark_mode": "深色模式", "nav_dashboard": "仪表板", "nav_transactions": "交易记录", "nav_analytics": "数据分析", "activity_title": "分析与交易记录", "nav_activity": "活动记录", "cycle_title": "收入与支出周期", "nav_accounts": "账户与钱包", "nav_assets": "房地产与资产", "nav_settings": "设置", "nav_account": "账户", "nav_home": "首页", "add_transaction": "添加交易", "add_short": "添加", "tab_overview": "概览", "search_placeholder": "搜索交易、类别…", "promo_text": "在一处管理您的所有资金 — 支出、储蓄和房产。", "logout": "退出登录", "this_month_spend": "本月支出", "net_worth": "总净资产", "accounts_savings": "账户 / 储蓄", "debts": "债务", "income": "收入", "leftover": "结余", "accounts": "账户", "wallets": "钱包", "recent_transactions": "最近交易", "see_all": "查看全部", "spending_wallet": "消费钱包", "wallet_total_sub": "所有账户总计", "vs_below": "比上月低 {v}%", "vs_above": "比上月高 {v}%", "first_month": "首个记录月份 — 暂无上月对比数据", "no_transactions_yet": "暂无交易", "no_accounts": "暂无账户", "expense_total": "支出总计", "this_month": "本月", "top_spending": "最高支出", "all_transactions": "全部交易", "no_expenses_month": "本月暂无支出", "no_spending_month": "本月暂无消费", "no_transactions_found": "未找到交易", "delete_label": "删除", "delete_confirm": "确定要删除此条目吗？", "deleted": "已删除", "monthly": "按月", "monthly_summary": "月度汇总", "prev_month": "上个月", "next_month": "下个月", "choose_app": "选择应用", "income_this_month": "收入 — 本月", "expenses_this_month": "支出 — 本月", "net_worth_breakdown": "净资产构成", "history": "历史记录", "no_history": "暂无历史记录", "add_expense": "添加支出", "add_income": "添加收入", "expenses": "支出", "enter_amount": "输入金额", "select_category": "选择类别", "date_label": "日期", "note_optional": "备注（可选）", "note_placeholder": "例如：午餐、出租车、工资", "backspace": "退格", "please_enter_amount": "请输入金额", "saved": "已保存", "cat_food": "食品", "cat_transport": "交通", "cat_bills": "账单", "cat_shopping": "购物", "cat_health": "健康", "cat_entertainment": "娱乐", "cat_education": "教育", "cat_other": "其他", "cat_salary": "工资", "cat_business": "商业", "cat_freelance": "自由职业", "cat_investment": "投资", "edit": "编辑", "edit_profile": "编辑个人资料", "first_name": "名字", "last_name": "姓氏", "email_label": "电子邮箱", "save_profile": "保存资料", "profile_saved": "资料已保存", "member_sub": "将您的所有财务集中在一处", "account_information": "账户信息", "help_support": "帮助与支持", "about": "关于", "total_label": "总计", "add_account_saving": "添加账户 / 储蓄", "name_label": "名称", "type_label": "类型", "balance_label": "余额", "note_label": "备注", "optional_word": "可选", "add_account": "添加账户", "ph_account_name": "例如：现金、KBZ Pay、银行", "type_cash": "现金", "type_bank": "银行", "type_ewallet": "电子钱包", "type_savings": "储蓄", "limitation_note": "注意：与正式 MVP 相同，账户余额为存储的金额 — 添加交易不会自动更改账户余额。", "account_added": "账户已添加", "no_accounts_yet": "暂无账户", "total_current_value": "当前总价值", "add_asset_title": "添加房地产 / 资产", "purchase_price_label": "购买价格", "current_value_label": "当前价值", "location_note_label": "地点 / 备注", "ph_asset_name": "例如：土地、房屋", "add_asset": "添加资产", "asset_added": "资产已添加", "no_assets_yet": "暂无资产", "bought_label": "购买价", "pl_label": "盈亏", "type_house": "房屋", "type_land": "土地", "type_condo": "公寓", "type_gold": "黄金", "add_debt": "添加债务", "ph_debt_name": "债务名称", "amount_label": "金额", "debt_added": "债务已添加", "no_debts": "暂无债务", "language_label": "语言", "about_text": "Ngwe Chay Yar 帮助您记录日常支出、每月收入和消费、储蓄与房地产，并在一处查看您的总净资产。", "reset_sample": "重置所有数据", "reset_confirm": "确定要将所有数据重置为初始数据吗？", "sample_reset": "数据已重置", "app_preview": "手机应用", "app_preview_text": "Ngwe Chay Yar 在手机上的样子。", "manage": "管理", "nav_message": "消息", "msg_need_username": "您需要先创建用户名才能使用此功能", "msg_gate_sub": "与您的伴侣分享每日开支，互相更新，共同规划财务。", "msg_create_username": "创建用户名", "msg_username_label": "用户名", "msg_username_ph": "例如 my_name", "msg_display_name": "显示名称", "msg_username_hint": "3–20 个字符 — 仅限小写字母 (a–z)、数字或 _", "msg_err_invalid": "请使用 3–20 个字符：仅限小写字母、数字或下划线", "msg_err_taken": "此用户名已被占用", "msg_available": "此用户名可用", "msg_created": "用户名已创建", "msg_people": "联系人", "msg_results": "搜索结果", "msg_search_ph": "按用户名搜索", "msg_no_results": "未找到任何人", "msg_conversations": "聊天", "msg_no_chats": "暂无聊天 — 搜索用户名开始聊天", "msg_online": "在线", "msg_attach": "附加照片、视频或文件", "msg_type_ph": "输入消息…", "msg_send": "发送", "msg_file_label": "文件", "msg_attach_note": "照片和视频仅在本次会话中显示。", "msg_demo_reply": "感谢分享！", "msg_share_cost": "分享今日开支", "msg_today_costs": "今日开支", "msg_your_username": "您的用户名", "msg_edit_username": "编辑用户名", "msg_save_username": "保存用户名", "msg_partner": "伴侣", "msg_attach_session": "附件 — 来自较早的会话", "msg_back": "返回", "msg_select_chat": "选择一个对话", "support_title": "Ngwe Chay Yar Support", "support_online": "在线", "support_sub": "为您提供账户、支出和应用方面的帮助", "support_greeting": "您好！今天有什么可以帮您的？", "support_ph": "给 Ngwe Chay Yar Support 发消息…", "support_hint": "可附加不超过 10 MB 的照片、视频和文档。", "support_reply": "感谢您的联系 — 管理员会很快在这里回复您。", "change_photo": "更换照片", "remove_photo": "删除照片"}, "th": {"dark_mode": "โหมดมืด", "nav_dashboard": "แดชบอร์ด", "nav_transactions": "รายการธุรกรรม", "nav_analytics": "การวิเคราะห์", "activity_title": "การวิเคราะห์และธุรกรรม", "nav_activity": "กิจกรรม", "cycle_title": "วงจรรายรับ–รายจ่าย", "nav_accounts": "บัญชีและกระเป๋าเงิน", "nav_assets": "อสังหาริมทรัพย์และสินทรัพย์", "nav_settings": "การตั้งค่า", "nav_account": "บัญชีผู้ใช้", "nav_home": "หน้าแรก", "add_transaction": "เพิ่มรายการ", "add_short": "เพิ่ม", "tab_overview": "ภาพรวม", "search_placeholder": "ค้นหารายการ หมวดหมู่…", "promo_text": "ติดตามเงินทั้งหมดของคุณในที่เดียว — ค่าใช้จ่าย เงินออม และอสังหาริมทรัพย์", "logout": "ออกจากระบบ", "this_month_spend": "ค่าใช้จ่ายเดือนนี้", "net_worth": "มูลค่าสุทธิรวม", "accounts_savings": "บัญชี / เงินออม", "debts": "หนี้สิน", "income": "รายได้", "leftover": "เงินคงเหลือ", "accounts": "บัญชี", "wallets": "กระเป๋าเงิน", "recent_transactions": "รายการล่าสุด", "see_all": "ดูทั้งหมด", "spending_wallet": "กระเป๋าใช้จ่าย", "wallet_total_sub": "ยอดรวมทุกบัญชี", "vs_below": "ต่ำกว่าเดือนที่แล้ว {v}%", "vs_above": "สูงกว่าเดือนที่แล้ว {v}%", "first_month": "เดือนแรกที่มีบันทึก — ยังไม่มีข้อมูลเปรียบเทียบกับเดือนที่แล้ว", "no_transactions_yet": "ยังไม่มีรายการ", "no_accounts": "ไม่มีบัญชี", "expense_total": "ค่าใช้จ่ายรวม", "this_month": "เดือนนี้", "top_spending": "ค่าใช้จ่ายสูงสุด", "all_transactions": "รายการทั้งหมด", "no_expenses_month": "เดือนนี้ยังไม่มีค่าใช้จ่าย", "no_spending_month": "เดือนนี้ยังไม่มีการใช้จ่าย", "no_transactions_found": "ไม่พบรายการ", "delete_label": "ลบ", "delete_confirm": "ต้องการลบรายการนี้หรือไม่?", "deleted": "ลบแล้ว", "monthly": "รายเดือน", "monthly_summary": "สรุปรายเดือน", "prev_month": "เดือนก่อนหน้า", "next_month": "เดือนถัดไป", "choose_app": "เลือกแอป", "income_this_month": "รายได้ — เดือนนี้", "expenses_this_month": "ค่าใช้จ่าย — เดือนนี้", "net_worth_breakdown": "รายละเอียดมูลค่าสุทธิ", "history": "ประวัติ", "no_history": "ยังไม่มีประวัติ", "add_expense": "เพิ่มค่าใช้จ่าย", "add_income": "เพิ่มรายได้", "expenses": "ค่าใช้จ่าย", "enter_amount": "ใส่จำนวนเงิน", "select_category": "เลือกหมวดหมู่", "date_label": "วันที่", "note_optional": "หมายเหตุ (ไม่บังคับ)", "note_placeholder": "เช่น ข้าวกลางวัน แท็กซี่ เงินเดือน", "backspace": "ลบตัวเลข", "please_enter_amount": "กรุณาใส่จำนวนเงิน", "saved": "บันทึกแล้ว", "cat_food": "อาหาร", "cat_transport": "การเดินทาง", "cat_bills": "บิลและค่าสาธารณูปโภค", "cat_shopping": "ช้อปปิ้ง", "cat_health": "สุขภาพ", "cat_entertainment": "ความบันเทิง", "cat_education": "การศึกษา", "cat_other": "อื่นๆ", "cat_salary": "เงินเดือน", "cat_business": "ธุรกิจ", "cat_freelance": "ฟรีแลนซ์", "cat_investment": "การลงทุน", "edit": "แก้ไข", "edit_profile": "แก้ไขโปรไฟล์", "first_name": "ชื่อ", "last_name": "นามสกุล", "email_label": "อีเมล", "save_profile": "บันทึกโปรไฟล์", "profile_saved": "บันทึกโปรไฟล์แล้ว", "member_sub": "การเงินทั้งหมดของคุณในที่เดียว", "account_information": "ข้อมูลบัญชี", "help_support": "ความช่วยเหลือและการสนับสนุน", "about": "เกี่ยวกับ", "total_label": "รวมทั้งหมด", "add_account_saving": "เพิ่มบัญชี / เงินออม", "name_label": "ชื่อ", "type_label": "ประเภท", "balance_label": "ยอดคงเหลือ", "note_label": "หมายเหตุ", "optional_word": "ไม่บังคับ", "add_account": "เพิ่มบัญชี", "ph_account_name": "เช่น เงินสด KBZ Pay ธนาคาร", "type_cash": "เงินสด", "type_bank": "ธนาคาร", "type_ewallet": "กระเป๋าเงินอิเล็กทรอนิกส์", "type_savings": "เงินออม", "limitation_note": "หมายเหตุ: เช่นเดียวกับ MVP จริง ยอดคงเหลือในบัญชีเป็นจำนวนที่บันทึกไว้ — การเพิ่มรายการจะไม่เปลี่ยนยอดคงเหลือในบัญชีโดยอัตโนมัติ", "account_added": "เพิ่มบัญชีแล้ว", "no_accounts_yet": "ยังไม่มีบัญชี", "total_current_value": "มูลค่าปัจจุบันรวม", "add_asset_title": "เพิ่มอสังหาริมทรัพย์ / สินทรัพย์", "purchase_price_label": "ราคาซื้อ", "current_value_label": "มูลค่าปัจจุบัน", "location_note_label": "สถานที่ / หมายเหตุ", "ph_asset_name": "เช่น ที่ดิน บ้าน", "add_asset": "เพิ่มสินทรัพย์", "asset_added": "เพิ่มสินทรัพย์แล้ว", "no_assets_yet": "ยังไม่มีสินทรัพย์", "bought_label": "ราคาซื้อ", "pl_label": "กำไร/ขาดทุน", "type_house": "บ้าน", "type_land": "ที่ดิน", "type_condo": "คอนโด", "type_gold": "ทองคำ", "add_debt": "เพิ่มหนี้", "ph_debt_name": "ชื่อหนี้", "amount_label": "จำนวนเงิน", "debt_added": "เพิ่มหนี้แล้ว", "no_debts": "ไม่มีหนี้", "language_label": "ภาษา", "about_text": "Ngwe Chay Yar ช่วยให้คุณติดตามค่าใช้จ่ายรายวัน รายได้และค่าใช้จ่ายรายเดือน เงินออม และอสังหาริมทรัพย์ พร้อมดูมูลค่าสุทธิรวมได้ในที่เดียว", "reset_sample": "รีเซ็ตข้อมูลทั้งหมด", "reset_confirm": "ต้องการรีเซ็ตข้อมูลทั้งหมดกลับเป็นข้อมูลเริ่มต้นหรือไม่?", "sample_reset": "รีเซ็ตข้อมูลแล้ว", "app_preview": "แอปมือถือ", "app_preview_text": "หน้าตาของ Ngwe Chay Yar บนโทรศัพท์", "manage": "จัดการ", "nav_message": "ข้อความ", "msg_need_username": "คุณต้องสร้างชื่อผู้ใช้ก่อนจึงจะใช้ตัวเลือกนี้ได้", "msg_gate_sub": "แชร์ค่าใช้จ่ายประจำวันกับคู่ของคุณ อัปเดตกันและกัน และวางแผนการเงินร่วมกันได้ที่นี่", "msg_create_username": "สร้างชื่อผู้ใช้", "msg_username_label": "ชื่อผู้ใช้", "msg_username_ph": "เช่น my_name", "msg_display_name": "ชื่อที่แสดง", "msg_username_hint": "3–20 ตัวอักษร — ตัวพิมพ์เล็ก (a–z) ตัวเลข หรือ _ เท่านั้น", "msg_err_invalid": "ใช้ 3–20 ตัวอักษร: ตัวพิมพ์เล็ก ตัวเลข หรือ _ เท่านั้น", "msg_err_taken": "ชื่อผู้ใช้นี้ถูกใช้แล้ว", "msg_available": "ชื่อผู้ใช้นี้ใช้ได้", "msg_created": "สร้างชื่อผู้ใช้แล้ว", "msg_people": "ผู้คน", "msg_results": "ผลลัพธ์", "msg_search_ph": "ค้นหาด้วยชื่อผู้ใช้", "msg_no_results": "ไม่พบผู้คน", "msg_conversations": "แชท", "msg_no_chats": "ยังไม่มีการสนทนา — ค้นหาชื่อผู้ใช้เพื่อเริ่มต้น", "msg_online": "ออนไลน์", "msg_attach": "แนบรูปภาพ วิดีโอ หรือไฟล์", "msg_type_ph": "พิมพ์ข้อความ…", "msg_send": "ส่ง", "msg_file_label": "ไฟล์", "msg_attach_note": "รูปภาพและวิดีโอจะแสดงเฉพาะในเซสชันนี้", "msg_demo_reply": "ขอบคุณที่แชร์!", "msg_share_cost": "แชร์ค่าใช้จ่ายวันนี้", "msg_today_costs": "ค่าใช้จ่ายวันนี้", "msg_your_username": "ชื่อผู้ใช้ของคุณ", "msg_edit_username": "แก้ไขชื่อผู้ใช้", "msg_save_username": "บันทึกชื่อผู้ใช้", "msg_partner": "คู่ของคุณ", "msg_attach_session": "ไฟล์แนบ — จากเซสชันก่อนหน้า", "msg_back": "กลับ", "msg_select_chat": "เลือกการสนทนา", "support_title": "Ngwe Chay Yar Support", "support_online": "ออนไลน์", "support_sub": "ช่วยเหลือเกี่ยวกับบัญชี ค่าใช้จ่าย และแอปของคุณ", "support_greeting": "สวัสดี! วันนี้ให้เราช่วยอะไรดี?", "support_ph": "ส่งข้อความถึง Ngwe Chay Yar Support…", "support_hint": "สามารถแนบรูปภาพ วิดีโอ และเอกสารได้สูงสุด 10 MB", "support_reply": "ขอบคุณที่ติดต่อเรา — ผู้ดูแลจะตอบกลับที่นี่ในไม่ช้า", "change_photo": "เปลี่ยนรูปภาพ", "remove_photo": "ลบรูปภาพ"}};
+var LOCALES = {"en":"en-US","my":"my-MM","zh":"zh-CN","th":"th-TH"};
+var LANG_NATIVE = {"en":"English","my":"မြန်မာ","zh":"中文","th":"ไทย"};
+var LANG_ORDER = ['en','my','zh','th'];
+var EXPENSE_CATS = ['Food','Transport','Bills','Shopping','Health','Entertainment','Education','Other'];
+var INCOME_CATS = ['Salary','Business','Freelance','Investment','Other'];
+var CAT_KEY = {Food:'cat_food',Transport:'cat_transport',Bills:'cat_bills',Shopping:'cat_shopping',Health:'cat_health',Entertainment:'cat_entertainment',Education:'cat_education',Other:'cat_other',Salary:'cat_salary',Business:'cat_business',Freelance:'cat_freelance',Investment:'cat_investment'};
+var ACC_TYPE_KEY = {cash:'type_cash',bank:'type_bank',ewallet:'type_ewallet',savings:'type_savings'};
+var ASSET_TYPE_KEY = {House:'type_house',Land:'type_land',Condo:'type_condo',Gold:'type_gold',Other:'cat_other'};
+var DONUT_COLORS = ['#16A34A','#D92D20','#86EFAC','#14532D','#BBF7D0','#4ADE80','#0B3D24','#DCFCE7'];
+var TITLE_KEY = {home:'nav_dashboard', activity:'activity_title', add:'add_transaction', account:'nav_account', accounts:'nav_accounts', assets:'nav_assets', settings:'nav_settings', message:'nav_message', support:'support_title'};
+
+function lang(){ return (state && state.lang && STRINGS.en && STRINGS[state.lang]) ? state.lang : 'my'; }
+function t(k){ var L=lang(); return (STRINGS[L] && STRINGS[L][k]) || (STRINGS.en && STRINGS.en[k]) || k; }
+function catLabel(c){ return CAT_KEY[c] ? t(CAT_KEY[c]) : String(c||''); }
+function accTypeLabel(x){ return ACC_TYPE_KEY[x] ? t(ACC_TYPE_KEY[x]) : String(x||''); }
+function assetTypeLabel(x){ return ASSET_TYPE_KEY[x] ? t(ASSET_TYPE_KEY[x]) : String(x||''); }
+function locale(){ return LOCALES[lang()] || 'en-US'; }
+function fmtDateObj(d, opts){ try{ return new Intl.DateTimeFormat(locale(), opts).format(d); }catch(e){ try{ return new Intl.DateTimeFormat('en-US', opts).format(d); }catch(e2){ return d.toLocaleDateString('en-GB',{weekday:'short', day:'numeric', month:'short', year:'numeric'}); } } }
+function fmtDateISO(iso){ var a=String(iso||'').split('-'); if(a.length!==3) return String(iso||''); var d=new Date(+a[0], (+a[1])-1, +a[2]); return fmtDateObj(d, {day:'numeric', month:'short', year:'numeric'}); }
+
+function todayISO(){ var d=new Date(); return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0'); }
+function monthDateISO(offset){ var d=new Date(); var dd=d.getDate(); var t=new Date(d.getFullYear(), d.getMonth()-offset, 1); var last=new Date(t.getFullYear(), t.getMonth()+1, 0).getDate(); var day=Math.min(dd,last); return t.getFullYear()+'-'+String(t.getMonth()+1).padStart(2,'0')+'-'+String(day).padStart(2,'0'); }
+function monthPrefix(){ return todayISO().slice(0,7); }
+function prevPrefix(p){ var a=p.split('-'), y=+a[0], m=+a[1]-1; if(m===0){m=12;y--;} return y+'-'+String(m).padStart(2,'0'); }
+function monthLabel(p){ var a=p.split('-'); return fmtDateObj(new Date(+a[0], (+a[1])-1, 1), {month:'short', year:'numeric'}); }
+function monthLabelLong(p){ var a=p.split('-'); return fmtDateObj(new Date(+a[0], (+a[1])-1, 1), {month:'long', year:'numeric'}); }
+function monthShort(p){ var a=p.split('-'); return fmtDateObj(new Date(+a[0], (+a[1])-1, 1), {month:'short'}); }
+var _id = 0;
+function nid(){ return --_id; } /* negative temp ids for optimistic rows; swapped for server ids on API success */
+
+function save(s){ /* no-op: state lives on the server now; kept for call-site compatibility */ }
+var ERR_TEXT = {en:'Something went wrong — please try again.', my:'တစ်ခုခု မှားယွင်းနေပါသည် — ထပ်စမ်းကြည့်ပါ', zh:'出了点问题 — 请重试', th:'เกิดข้อผิดพลาด — โปรดลองอีกครั้ง'};
+function errText(){ return ERR_TEXT[lang()] || ERR_TEXT.en; }
+function errFlash(){ flash(errText()); }
+function apiFetch(method, url, body, isForm){
+  var opts = {method:method, headers:{}};
+  if(isForm){ opts.body = body; }
+  else if(body !== undefined){ opts.headers['Content-Type'] = 'application/json'; opts.body = JSON.stringify(body); }
+  return fetch(url, opts).then(function(r){
+    if(r.status === 401){ location.href = '/login'; throw {auth:true}; }
+    return r.json().catch(function(){ return {}; }).then(function(j){
+      if(!r.ok) throw {status:r.status, body:j};
+      return j;
+    });
+  });
+}
+function apiFail(e){ if(e && e.auth) return; errFlash(); refetchState(); }
+var photoVer = 1;
+var serverToday = '';
+function emptyState(){
+  return {
+    lang: 'my',
+    theme: 'light',
+    myUsername: '',
+    myDisplay: '',
+    conversations: [],
+    support: {messages:[]},
+    profilePhoto: '',
+    profile: {first:'', last:'', email:'', photo:false},
+    accounts: [],
+    assets: [],
+    debts: [],
+    transactions: []
+  };
+}
+function splitName(full){
+  full = String(full||'').trim();
+  var i = full.indexOf(' ');
+  if(i < 0) return {first:full, last:''};
+  return {first:full.slice(0,i), last:full.slice(i+1).trim()};
+}
+function applyServerState(d){
+  if(!d) return;
+  var p = d.profile || {};
+  var nm = splitName(p.name || '');
+  state.profile = {first:nm.first, last:nm.last, email:p.email||'', photo:!!p.photo, role:p.role||'user'};
+  state.myUsername = p.username || '';
+  state.myDisplay = p.name || '';
+  state.profilePhoto = p.photo ? ('/api/profile/photo?v=' + photoVer) : '';
+  var st = d.settings || {};
+  if(st.lang && STRINGS[st.lang]) state.lang = st.lang;
+  state.theme = (st.theme === 'dark') ? 'dark' : 'light';
+  state.accounts = d.accounts || [];
+  state.assets = d.assets || [];
+  state.debts = d.debts || [];
+  state.transactions = d.transactions || [];
+  state.conversations = (d.conversations || []).map(function(c){ return {username:c.username, name:c.name||c.username, messages: c.last ? [c.last] : []}; });
+  state.support = {messages: (d.support && d.support.messages) || []};
+  if(d.server_today) serverToday = d.server_today;
+}
+function refetchState(){
+  return apiFetch('GET', '/api/state').then(function(d){
+    applyServerState(d);
+    applyLang(); applyTheme(); renderAll();
+  }).catch(function(){});
+}
+function boot(){
+  apiFetch('GET', '/api/state').then(function(d){
+    applyServerState(d);
+    try{ el('add-date').value = serverToday || todayISO(); }catch(e){}
+    applyLang();
+    setKind('expense');
+    renderAll();
+    var bl = el('bootload'); if(bl !== DUMMY) bl.style.display = 'none';
+  }).catch(function(e){
+    if(e && e.auth) return;
+    try{ el('add-date').value = todayISO(); }catch(e2){}
+    applyLang(); setKind('expense'); renderAll();
+    var bl = el('bootload'); if(bl !== DUMMY) bl.style.display = 'none';
+    errFlash();
+  });
+}
+var state = emptyState();
+var uiSearch = '';
+var addState = {kind:'expense', category:'Food', amountStr:''};
+  msgView='home'; msgChatUser=''; msgSearch='';
+var curPage = 'home';
+
+function fmt(n){ return Number(n||0).toLocaleString('en-US',{maximumFractionDigits:0}); }
+function mmk(n){ return fmt(n); }
+function esc(s){ return String(s==null?'':s).replace(/[&<>"']/g, function(c){ return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]; }); }
+function svgI(p){ return '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">' + p + '</svg>'; }
+var P = {
+  food:'<path d="M4 12.5h16a8 8 0 0 1-16 0z"/><path d="M9.5 8c0-1.4 1-1.6 1-3M14 8c0-1.4 1-1.6 1-3"/>',
+  car:'<path d="M5 13.5l1.6-4.2A2 2 0 0 1 8.5 8h7a2 2 0 0 1 1.9 1.3L19 13.5M5 13.5h14M5 13.5V18m14-4.5V18"/><circle cx="8" cy="18" r="1.4"/><circle cx="16" cy="18" r="1.4"/>',
+  wallet:'<rect x="3.5" y="6.5" width="17" height="12" rx="2.5"/><path d="M3.5 10.2h17M16.8 15h.01"/>',
+  bill:'<path d="M7 3.5h10V20l-2-1.3L13 20l-2-1.3L9 20l-2-1.3z"/><path d="M10 8h4M10 11.8h4"/>',
+  bag:'<path d="M5.5 8h13l-1.1 12.5H6.6z"/><path d="M9 10.5V6.8a3 3 0 0 1 6 0v3.7"/>',
+  heart:'<path d="M12 20.3C7.2 16.6 4.2 13.4 4.2 9.9 4.2 7.3 6.2 5.2 8.6 5.2c1.4 0 2.6.7 3.4 1.8.8-1.1 2-1.8 3.4-1.8 2.4 0 4.4 2.1 4.4 4.7 0 3.5-3 6.7-7.8 10.4z"/>',
+  play:'<rect x="4" y="5" width="16" height="14" rx="3"/><path d="M10.5 9.4l4.8 2.6-4.8 2.6z"/>',
+  book:'<path d="M5.5 4.5H16A2.5 2.5 0 0 1 18.5 7v12.5h-11A2.5 2.5 0 0 1 5 17z"/><path d="M5 17a2.5 2.5 0 0 1 2.5-2.5h11"/>',
+  brief:'<rect x="3.5" y="8" width="17" height="11" rx="2"/><path d="M9 8V6.2A2.2 2.2 0 0 1 11.2 4h1.6A2.2 2.2 0 0 1 15 6.2V8M3.5 12.8h17"/>',
+  chart:'<path d="M4.5 4v15.5h15"/><path d="M9 16v-4.5M13.2 16V8.5M17.4 16v-6.5"/>',
+  home:'<path d="M4.8 11.2L12 5l7.2 6.2M6.8 9.6V19h10.4V9.6"/>',
+  pin:'<path d="M12 20.8S5.9 15.6 5.9 10.6a6.1 6.1 0 0 1 12.2 0c0 5-6.1 10.2-6.1 10.2z"/><circle cx="12" cy="10.4" r="2.2"/>',
+  card:'<rect x="3.5" y="6" width="17" height="12" rx="2.5"/><path d="M3.5 10h17"/>',
+  phone:'<rect x="7.5" y="3.5" width="9" height="17" rx="2"/><path d="M11 17.6h2"/>',
+  bank:'<path d="M4.5 9.5L12 4.8l7.5 4.7M5.5 9.5v8M9.8 9.5v8M14.2 9.5v8M18.5 9.5v8M4 20.2h16M4 17.5h16"/>',
+  dots:'<circle cx="12" cy="12" r="8.4"/><path d="M8.4 12h.01M12 12h.01M15.6 12h.01"/>',
+  note:'<rect x="4" y="6" width="16" height="12" rx="2"/><circle cx="12" cy="12" r="2.6"/>',
+  check:'<path d="M5 12.5l4.5 4.5L19 7.5"/>',
+  globe:'<circle cx="12" cy="12" r="8.6"/><path d="M3.4 12h17.2M12 3.4c2.4 2.3 3.6 5.2 3.6 8.6s-1.2 6.3-3.6 8.6c-2.4-2.3-3.6-5.2-3.6-8.6S9.6 5.7 12 3.4z"/>'
+};
+function iconFor(cat){
+  var c = String(cat||'');
+  if(P[c.toLowerCase()]) return svgI(P[c.toLowerCase()]);
+  var map = {Food:'food', Transport:'car', Salary:'wallet', Bills:'bill', Shopping:'bag', Health:'heart', Entertainment:'play', Education:'book', Business:'brief', Freelance:'brief', Investment:'chart', Land:'pin', House:'home', Condo:'home', Gold:'note'};
+  return svgI(P[map[c]||'dots']);
+}
+function typeIcon(type){
+  var map = {cash:'note', bank:'bank', ewallet:'phone', savings:'wallet'};
+  return svgI(P[map[type]||'wallet']);
+}
+
+var BRAND_LOGOS = {
+  kbzpay:'/static/img/brands/kbzpay.png',
+  wave:'/static/img/brands/wave.png',
+  ayapay:'/static/img/brands/ayapay.png',
+  cbpay:'/static/img/brands/cbpay.png',
+  mytelpay:'/static/img/brands/mytelpay.png',
+  kbzbank:'/static/img/brands/kbzbank.png',
+  ayabank:'/static/img/brands/ayabank.png',
+  cbbank:'/static/img/brands/cbbank.png',
+  yoma:'/static/img/brands/yoma.png'
+};
+var BRANDS = [
+  {key:'kbzpay', name:'KBZ Pay', type:'ewallet', mark:'KPay'},
+  {key:'wave', name:'Wave Money', type:'ewallet', mark:'Wave'},
+  {key:'ayapay', name:'AYA Pay', type:'ewallet', mark:'AYA'},
+  {key:'cbpay', name:'CB Pay', type:'ewallet', mark:'CB'},
+  {key:'mytelpay', name:'MytelPay', type:'ewallet', mark:'Mytel'},
+  {key:'kbzbank', name:'KBZ Bank', type:'bank', mark:'KBZ'},
+  {key:'ayabank', name:'AYA Bank', type:'bank', mark:'AYA'},
+  {key:'cbbank', name:'CB Bank', type:'bank', mark:'CB'},
+  {key:'yoma', name:'Yoma Bank', type:'bank', mark:'Yoma'}
+];
+var selBrand = '';
+function brandByKey(k){ for(var i=0;i<BRANDS.length;i++) if(BRANDS[i].key===k) return BRANDS[i]; return null; }
+function brandFor(r){
+  if(!r) return null;
+  if(r.brand){ var b = brandByKey(r.brand); if(b) return b; if(r.brand==='cash') return {key:'cash', name:'Cash', type:'cash', mark:''}; }
+  var n = String(r.name||'').toLowerCase();
+  for(var i=0;i<BRANDS.length;i++){ var bn = BRANDS[i].name.toLowerCase(); if(n===bn || n.indexOf(bn+' ')===0 || n.indexOf(bn+'-')===0) return BRANDS[i]; }
+  if(n==='cash') return {key:'cash', name:'Cash', type:'cash', mark:''};
+  return null;
+}
+function brandTile(r, cls){
+  var b = brandFor(r);
+  if(!b) return '<span class="chip-ico">'+typeIcon(r.type)+'</span>';
+  if(b.key==='cash') return '<span class="brand-tile neutral '+(cls||'')+'">'+svgI(P.note)+'</span>';
+  return '<span class="brand-tile logo bt-'+b.key+' '+(cls||'')+'"><img src="'+BRAND_LOGOS[b.key]+'" alt="'+esc(b.name)+'"></span>';
+}
+function renderBrandPicker(){
+  var items = BRANDS.map(function(b){ return {key:b.key, name:b.name}; });
+  items.push({key:'cash', name:'Cash'});
+  items.push({key:'other', name:t('cat_other')});
+  el('ac-brandgrid').innerHTML = items.map(function(it){
+    var tile;
+    if(it.key==='cash') tile = '<span class="brand-tile neutral">'+svgI(P.note)+'</span>';
+    else if(it.key==='other') tile = '<span class="brand-tile neutral">'+svgI(P.dots)+'</span>';
+    else { var b = brandByKey(it.key); tile = '<span class="brand-tile logo bt-'+b.key+'"><img src="'+BRAND_LOGOS[b.key]+'" alt="'+esc(b.name)+'"></span>'; }
+    return '<button type="button" class="brandpick'+(selBrand===it.key?' on':'')+'" onclick="pickBrand(\''+it.key+'\')">'+tile+'<span>'+esc(it.name)+'</span></button>';
+  }).join('');
+}
+function pickBrand(key){
+  if(key==='other'){ selBrand=''; renderBrandPicker(); return; }
+  selBrand = key;
+  if(key==='cash'){ el('ac-name-in').value = 'Cash'; el('ac-type-in').value = 'cash'; }
+  else { var b = brandByKey(key); if(b){ el('ac-name-in').value = b.name; el('ac-type-in').value = b.type; } }
+  renderBrandPicker();
+}
+
+var DUMMY = {textContent:'', innerHTML:'', value:'', style:{}, classList:{add:function(){}, remove:function(){}, toggle:function(){}}, setAttribute:function(){}, getAttribute:function(){ return null; }};
+function el(id){ try{ var e=document.getElementById(id); return e||DUMMY; }catch(e){ return DUMMY; } }
+function all(sel){ try{ return Array.prototype.slice.call(document.querySelectorAll(sel)); }catch(e){ return []; } }
+
+/* ================= i18n rendering ================= */
+function applyLang(){
+  var L = lang();
+  try{ document.documentElement.setAttribute('lang', LOCALES[L]); }catch(e){}
+  try{
+    var b = document.body;
+    if(b && b.classList){ ['lang-en','lang-my','lang-zh','lang-th'].forEach(function(c){ b.classList.remove(c); }); b.classList.add('lang-'+L); }
+  }catch(e){}
+  el('lang-cur-m').textContent = LANG_NATIVE[L];
+  el('lang-cur-d').textContent = LANG_NATIVE[L];
+  renderStatic(); renderLangMenus(); renderSettingsLang();
+}
+function renderStatic(){
+  all('[data-i18n]').forEach(function(e){ var k=e.getAttribute('data-i18n'); if(k) e.textContent = t(k); });
+  all('[data-i18n-ph]').forEach(function(e){ var k=e.getAttribute('data-i18n-ph'); if(k) e.setAttribute('placeholder', t(k)); });
+  all('[data-i18n-aria]').forEach(function(e){ var k=e.getAttribute('data-i18n-aria'); if(k) e.setAttribute('aria-label', t(k)); });
+  el('settings-help-title').textContent = t('help_support') + ' / ' + t('about');
+  el('d-title').textContent = t(TITLE_KEY[curPage] || 'nav_dashboard');
+  setSelectLabels('ac-type-in', [['cash','type_cash'],['bank','type_bank'],['ewallet','type_ewallet'],['savings','type_savings']]);
+  setSelectLabels('as-type-in', [['House','type_house'],['Land','type_land'],['Condo','type_condo'],['Gold','type_gold'],['Other','cat_other']]);
+  var tt = el('add-title'); if(tt!==DUMMY) tt.textContent = addState.kind==='income' ? t('add_income') : t('add_expense');
+  var sv = el('add-save'); if(sv!==DUMMY) sv.textContent = addState.kind==='income' ? t('add_income') : t('add_expense');
+}
+function setSelectLabels(id, pairs){
+  var sel = el(id); if(sel===DUMMY || !sel.options) return;
+  pairs.forEach(function(pr, i){ var o = sel.options[i]; if(o) o.textContent = t(pr[1]); });
+}
+function langMenuHTML(){
+  return LANG_ORDER.map(function(L){
+    return '<button class="langopt'+(L===lang()?' on':'')+'" onclick="setLang(\''+L+'\')"><span>'+esc(LANG_NATIVE[L])+'</span>'+(L===lang()?'<span class="langcheck">'+svgI(P.check)+'</span>':'')+'</button>';
+  }).join('');
+}
+function renderLangMenus(){
+  var h = langMenuHTML();
+  el('langmenu-m').innerHTML = h;
+  el('langmenu-d').innerHTML = h;
+}
+function renderSettingsLang(){
+  el('settings-lang').innerHTML = LANG_ORDER.map(function(L){
+    return '<button class="langrow'+(L===lang()?' on':'')+'" onclick="setLang(\''+L+'\')"><span class="langrow-ico">'+svgI(P.globe)+'</span><span class="langrow-name">'+esc(LANG_NATIVE[L])+'</span>'+(L===lang()?'<span class="langcheck">'+svgI(P.check)+'</span>':'')+'</button>';
+  }).join('');
+}
+function toggleLangMenu(which){
+  var m = el('langmenu-'+which), other = el('langmenu-'+(which==='m'?'d':'m'));
+  var open = m.classList && m.classList.toggle ? false : false;
+  var isOpen = m.style && m.style.display==='block';
+  if(other!==DUMMY && other.style) other.style.display='none';
+  if(m!==DUMMY && m.style) m.style.display = isOpen ? 'none' : 'block';
+}
+function closeLangMenus(){ ['langmenu-m','langmenu-d'].forEach(function(id){ var m=el(id); if(m!==DUMMY && m.style) m.style.display='none'; }); }
+function setLang(L){
+  if(!STRINGS[L]) return;
+  state.lang = L;
+  apiFetch('POST', '/api/settings', {lang:L}).catch(function(){});
+  closeLangMenus();
+  applyLang(); renderAll();
+}
+
+function totals(){
+  var accounts = state.accounts.reduce(function(a,r){ return a+Number(r.balance||0); },0);
+  var assets = state.assets.reduce(function(a,r){ return a+Number(r.current_value||0); },0);
+  var debts = state.debts.reduce(function(a,r){ return a+Number(r.amount||0); },0);
+  var mt = monthTotals(monthPrefix());
+  return {accounts:accounts, assets:assets, debts:debts,
+    netWorth: accounts + assets - debts,
+    income:mt.income, expense:mt.expense, leftover:mt.income-mt.expense};
+}
+function monthTotals(prefix){
+  var inc=0, exp=0;
+  state.transactions.forEach(function(r){ if((r.txn_date||'').slice(0,7)===prefix){ if(r.kind==='income') inc+=Number(r.amount||0); else exp+=Number(r.amount||0); } });
+  return {income:inc, expense:exp, leftover:inc-exp};
+}
+function expenseByCategory(prefix){
+  var by={};
+  state.transactions.forEach(function(r){ if(r.kind==='expense' && (r.txn_date||'').slice(0,7)===prefix){ by[r.category]=(by[r.category]||0)+Number(r.amount||0); } });
+  return Object.keys(by).map(function(k){ return {cat:k, amount:by[k]}; }).sort(function(a,b){ return b.amount-a.amount; });
+}
+function nextPrefix(p){ var a=p.split('-'), y=+a[0], m=+a[1]+1; if(m===13){m=1;y++;} return y+'-'+String(m).padStart(2,'0'); }
+
+function flash(msg){
+  var f=el('flash'); f.textContent=msg; f.style.display='block';
+  setTimeout(function(){ f.style.display='none'; }, 2600);
+  try{ window.scrollTo({top:0, behavior:'smooth'}); }catch(e){}
+}
+function go(page){
+  curPage = page; closeLangMenus();
+  try{ document.body.classList.toggle('on-add', page==='add'); }catch(e){}
+  all('.page').forEach(function(p){ p.classList.remove('active'); });
+  var target=el('page-'+page); if(target!==DUMMY) target.classList.add('active');
+  all('[data-nav]').forEach(function(b){ b.classList.toggle('active', b.getAttribute('data-nav')===page); });
+  el('d-title').textContent = t(TITLE_KEY[page]||'nav_dashboard');
+  renderAll();
+  if(page==='support'){ startSupPoll(); } else { stopSupPoll(); }
+  if(page!=='message'){ stopChatPoll(); }
+  try{ window.scrollTo(0,0); }catch(e){}
+}
+function setSearch(v){ uiSearch = String(v||'').toLowerCase(); if(uiSearch) goSoft('activity'); renderActivity(); }
+function goSoft(page){
+  curPage = page;
+  try{ document.body.classList.toggle('on-add', page==='add'); }catch(e){}
+  all('.page').forEach(function(p){ p.classList.remove('active'); });
+  var target=el('page-'+page); if(target!==DUMMY) target.classList.add('active');
+  all('[data-nav]').forEach(function(b){ b.classList.toggle('active', b.getAttribute('data-nav')===page); });
+  el('d-title').textContent = t(TITLE_KEY[page]||'nav_dashboard');
+}
+function delItem(kind, id){
+  if(!confirm(t('delete_confirm'))) return;
+  var arr = state[kind] || [];
+  for(var i=0;i<arr.length;i++){ if(arr[i].id===id){ arr.splice(i,1); break; } }
+  renderAll(); flash(t('deleted'));
+  apiFetch('DELETE', '/api/'+kind+'/'+id).catch(function(e){ apiFail(e); });
+}
+function delBtn(kind, id){ return '<button class="delbtn" title="'+esc(t('delete_label'))+'" aria-label="'+esc(t('delete_label'))+'" onclick="delItem(\''+kind+'\','+id+')">'+svgI('<path d="M6 6l12 12M18 6L6 18"/>')+'</button>'; }
+function txnRow(r, withDel){
+  return '<div class="txn"><span class="chip-ico">'+iconFor(r.category)+'</span>'+
+    '<span class="tm"><span class="tn">'+esc(catLabel(r.category))+(r.note?' · '+esc(r.note):'')+'</span><div class="td">'+esc(fmtDateISO(r.txn_date))+'</div></span>'+
+    '<span class="ta '+r.kind+'">'+(r.kind==='income'?'+':'−')+mmk(r.amount)+'</span>'+(withDel?delBtn('transactions', r.id):'')+'</div>';
+}
+function sortedTxns(){
+  return state.transactions.slice().sort(function(a,b){ return (b.txn_date||'').localeCompare(a.txn_date||'') || b.id-a.id; });
+}
+
+function renderHome(){
+  var tt=totals();
+  el('h-dateline').innerHTML = '<b>'+esc(fmtDateObj(new Date(), {weekday:'short', day:'numeric', month:'short', year:'numeric'}))+'</b>';
+  el('h-spend').textContent = mmk(tt.expense);
+  var prev = monthTotals(prevPrefix(monthPrefix()));
+  if(prev.expense>0){
+    var diff = (prev.expense - tt.expense)/prev.expense*100;
+    el('h-vs').innerHTML = '<b>'+esc(t(diff>=0?'vs_below':'vs_above').replace('{v}', Math.abs(diff).toFixed(0)))+'</b>';
+  } else {
+    el('h-vs').textContent = t('first_month');
+  }
+  el('h-networth').textContent = mmk(tt.netWorth);
+  el('h-b-accounts').textContent = mmk(tt.accounts);
+  el('h-b-assets').textContent = mmk(tt.assets);
+  el('h-b-debts').textContent = '−'+mmk(tt.debts);
+  el('h-income').textContent = mmk(tt.income);
+  el('h-leftover').textContent = mmk(tt.leftover);
+  el('h-expense').textContent = mmk(tt.expense);
+  el('h-accounts').textContent = mmk(tt.accounts);
+  var w = '<div class="wrow total"><span class="chip-ico dk">'+svgI(P.wallet)+'</span><span class="tm"><span class="tn">'+esc(t('spending_wallet'))+'</span><div class="td">'+esc(t('wallet_total_sub'))+'</div></span><span class="wv">'+mmk(tt.accounts)+'</span></div>';
+  w += state.accounts.map(function(r){ return '<div class="wrow">'+brandTile(r)+'<span class="tm"><span class="tn">'+esc(r.name)+'</span><div class="td">'+esc(accTypeLabel(r.type))+(r.note?' · '+esc(r.note):'')+'</div></span><span class="wv">'+mmk(r.balance)+'</span></div>'; }).join('');
+  el('h-wallets').innerHTML = w;
+  var recent = sortedTxns().slice(0,6);
+  el('h-recent').innerHTML = recent.length ? recent.map(function(r){ return txnRow(r,false); }).join('') : '<p class="muted">'+esc(t('no_transactions_yet'))+'</p>';
+  el('r-networth').textContent = mmk(tt.netWorth);
+  el('r-accounts-v').textContent = mmk(tt.accounts);
+  el('r-assets-v').textContent = mmk(tt.assets);
+  el('r-debts-v').textContent = '−'+mmk(tt.debts);
+  el('r-accounts').innerHTML = state.accounts.length ? state.accounts.map(function(r){ return '<div class="rp-row"><span class="rp-nm">'+brandTile(r,'sm')+esc(r.name)+' <small>'+esc(accTypeLabel(r.type))+'</small></span><b>'+mmk(r.balance)+'</b></div>'; }).join('') : '<p class="muted">'+esc(t('no_accounts'))+'</p>';
+}
+
+function renderActivity(){
+  var tt = totals();
+  var prefix = monthPrefix();
+  /* summary strip — this month */
+  el('s-income').textContent = mmk(tt.income);
+  el('s-expense').textContent = mmk(tt.expense);
+  el('s-leftover').textContent = mmk(tt.leftover);
+  /* monthly analytics bars — last 6 months */
+  var months=[], p=prefix;
+  for(var i=0;i<5;i++) p=prevPrefix(p);
+  for(var j=0;j<6;j++){ var mt=monthTotals(p); months.push({prefix:p, income:mt.income, expense:mt.expense}); p=nextPrefix(p); }
+  var max=0; months.forEach(function(m){ max=Math.max(max, m.income, m.expense); });
+  el('a-bars').innerHTML = months.map(function(m){
+    var ih = max? Math.max(m.income/max*100, m.income?7:0):0, eh = max? Math.max(m.expense/max*100, m.expense?7:0):0;
+    return '<div class="bcol"><div class="bpair"><i class="inc" style="height:'+ih.toFixed(1)+'%"></i><i class="exp" style="height:'+eh.toFixed(1)+'%"></i></div></div>';
+  }).join('');
+  el('a-barlabs').innerHTML = months.map(function(m){ return '<div style="flex:1;text-align:center" class="blab">'+esc(monthShort(m.prefix))+'</div>'; }).join('');
+  /* income + expense cycle donut — shares of this month's total flow */
+  var flow = tt.income + tt.expense;
+  var incFrac = flow ? tt.income/flow : 0, expFrac = flow ? tt.expense/flow : 0;
+  el('c-centre').textContent = mmk(tt.leftover);
+  var EXP_RED = theme()==='dark' ? '#F97066' : '#D92D20';
+  var INC = theme()==='dark' ? '#4ADE80' : '#16A34A';
+  var C = 2*Math.PI*52, csvg='';
+  if(flow>0){
+    var incLen = Math.max(incFrac*C - 2.5, 0), expLen = Math.max(expFrac*C - 2.5, 0);
+    csvg += '<circle cx="60" cy="60" r="52" fill="none" stroke="'+INC+'" stroke-width="10" stroke-linecap="round" stroke-dasharray="'+incLen+' '+(C-incLen)+'" stroke-dashoffset="0" transform="rotate(-90 60 60)"></circle>';
+    csvg += '<circle cx="60" cy="60" r="52" fill="none" stroke="'+EXP_RED+'" stroke-width="10" stroke-linecap="round" stroke-dasharray="'+expLen+' '+(C-expLen)+'" stroke-dashoffset="'+(-(incFrac*C))+'" transform="rotate(-90 60 60)"></circle>';
+  } else {
+    csvg = '<circle cx="60" cy="60" r="52" fill="none" stroke="#E3EBE3" stroke-width="10"></circle>';
+  }
+  el('c-donut').innerHTML = csvg;
+  el('c-legend').innerHTML =
+    '<span><i style="background:'+INC+'"></i>'+esc(t('income'))+' '+mmk(tt.income)+' · '+(incFrac*100).toFixed(0)+'%</span>'+
+    '<span><i style="background:'+EXP_RED+'"></i>'+esc(t('expenses'))+' '+mmk(tt.expense)+' · '+(expFrac*100).toFixed(0)+'%</span>';
+  /* top spending by category — this month */
+  var by = expenseByCategory(prefix);
+  var totalExp = by.reduce(function(a,r){ return a+r.amount; },0);
+  el('t-top').innerHTML = by.length ? by.map(function(r){
+    var pct = totalExp ? r.amount/totalExp*100 : 0;
+    return '<div class="toprow"><span class="chip-ico">'+iconFor(r.cat)+'</span><span class="tm"><span class="tn">'+esc(catLabel(r.cat))+'</span><div class="pbar"><i style="width:'+pct.toFixed(1)+'%"></i></div></span><b class="expv">'+mmk(r.amount)+'</b></div>';
+  }).join('') : '<p class="muted">'+esc(t('no_spending_month'))+'</p>';
+  /* full transactions list — grouped by date, search-aware, with delete */
+  var rows = sortedTxns().filter(function(r){ if(!uiSearch) return true; return (r.category+' '+catLabel(r.category)+' '+(r.note||'')).toLowerCase().indexOf(uiSearch)>=0; });
+  if(!rows.length){ el('t-list').innerHTML = '<div class="listcard"><p class="muted" style="margin:4px 0">'+esc(t('no_transactions_found'))+'</p></div>'; }
+  else {
+    var groups={}, order=[];
+    rows.forEach(function(r){ var d=r.txn_date||'—'; if(!groups[d]){ groups[d]={rows:[],income:0,expense:0}; order.push(d); } groups[d].rows.push(r); groups[d][r.kind]+=Number(r.amount||0); });
+    var html='';
+    order.forEach(function(d){
+      var g=groups[d];
+      html += '<div class="dayhead"><span>'+esc(fmtDateISO(d))+'</span><span>+' + mmk(g.income) + ' · <span class="expv">−' + mmk(g.expense) + '</span></span></div>';
+      html += '<div class="listcard" style="padding-top:6px;padding-bottom:6px">' + g.rows.map(function(r){ return txnRow(r,true); }).join('') + '</div>';
+    });
+    el('t-list').innerHTML = html;
+  }
+  /* net worth breakdown */
+  var gross = tt.accounts + tt.assets;
+  var parts = [[t('accounts_savings'), tt.accounts], [t('nav_assets'), tt.assets]];
+  el('a-breakdown').innerHTML = parts.map(function(r){
+    var pct = gross ? r[1]/gross*100 : 0;
+    return '<div style="margin-bottom:12px"><div class="rowbet"><span style="font-weight:700;font-size:.9rem">'+esc(r[0])+'</span><span><b>'+mmk(r[1])+'</b> <small>'+pct.toFixed(1)+'%</small></span></div><div class="pbar"><i style="width:'+pct.toFixed(1)+'%"></i></div></div>';
+  }).join('') + '<div class="rowbet" style="border-top:1px solid rgba(16,20,16,.07);padding-top:10px"><span style="font-weight:700">'+esc(t('debts'))+'</span><b>−'+mmk(tt.debts)+'</b></div>' +
+    '<div class="rowbet" style="padding-top:6px"><span style="font-weight:700">'+esc(t('net_worth'))+'</span><b class="green-t">'+mmk(tt.netWorth)+'</b></div>';
+}
+
+/* ---- Monthly Summary (UI10, Change 5) ---- */
+var uiMonth = null;
+function selMonthPrefix(){ return uiMonth || monthPrefix(); }
+function shiftMonth(dir){
+  var p = selMonthPrefix();
+  var q = dir<0 ? prevPrefix(p) : nextPrefix(p);
+  if(q > monthPrefix()) return;
+  uiMonth = (q===monthPrefix()) ? null : q;
+  renderMonthly();
+}
+function selectMonth(p){ uiMonth = (p===monthPrefix()) ? null : p; renderMonthly(); }
+function renderMonthly(){
+  var p = selMonthPrefix();
+  var mt = monthTotals(p);
+  el('m-title').textContent = monthLabelLong(p);
+  el('m-income').textContent = mmk(mt.income);
+  el('m-expense').textContent = mmk(mt.expense);
+  el('m-leftover').textContent = mmk(mt.leftover);
+  var set = {}; state.transactions.forEach(function(r){ if(r.txn_date) set[String(r.txn_date).slice(0,7)] = 1; });
+  set[monthPrefix()] = 1;
+  var months = Object.keys(set).sort().reverse();
+  el('m-rows').innerHTML = months.map(function(mp){
+    var t2 = monthTotals(mp);
+    return '<button type="button" class="mrow'+(mp===p?' on':'')+'" onclick="selectMonth(\''+mp+'\')">' +
+      '<span class="mrow-top"><span class="mn">'+esc(monthLabelLong(mp))+'</span><b class="ml">'+mmk(t2.leftover)+'</b></span>' +
+      '<span class="mrow-sub"><span class="green-t">+'+fmt(t2.income)+'</span><span class="expv">−'+fmt(t2.expense)+'</span></span></button>';
+  }).join('');
+}
+
+function renderAccounts(){
+  var tt=totals();
+  el('a-total').textContent = t('total_label')+': '+mmk(tt.accounts);
+  el('a-list').innerHTML = state.accounts.length ? state.accounts.map(function(r){
+    return '<div class="mgrrow">'+brandTile(r)+'<span class="tm"><b>'+esc(r.name)+'</b> <small>'+esc(accTypeLabel(r.type))+(r.note?' · '+esc(r.note):'')+'</small></span><b>'+mmk(r.balance)+'</b>'+delBtn('accounts', r.id)+'</div>';
+  }).join('') : '<p class="muted">'+esc(t('no_accounts_yet'))+'</p>';
+}
+function renderAssets(){
+  var tt=totals();
+  el('as-total').textContent = t('total_current_value')+': '+mmk(tt.assets);
+  el('as-list').innerHTML = state.assets.length ? state.assets.map(function(r){
+    var pnl=Number(r.current_value||0)-Number(r.purchase_price||0);
+    return '<div class="mgrrow"><span class="chip-ico">'+iconFor(r.type)+'</span><span class="tm"><b>'+esc(r.name)+'</b> <small>'+esc(assetTypeLabel(r.type))+(r.location?' · '+esc(r.location):'')+'</small><div class="muted" style="font-size:.78rem">'+esc(t('bought_label'))+' '+mmk(r.purchase_price)+' · '+esc(t('pl_label'))+' <span class="'+(pnl>=0?'green-t':'')+'">'+(pnl>=0?'+':'')+mmk(pnl)+'</span></div></span><b>'+mmk(r.current_value)+'</b>'+delBtn('assets', r.id)+'</div>';
+  }).join('') : '<p class="muted">'+esc(t('no_assets_yet'))+'</p>';
+  el('db-total').textContent = t('debts')+' — '+t('total_label')+': '+mmk(tt.debts);
+  el('db-list').innerHTML = state.debts.length ? state.debts.map(function(r){
+    return '<div class="mgrrow"><span class="chip-ico">'+svgI(P.card)+'</span><span class="tm"><b>'+esc(r.name)+'</b>'+(r.note?' <small>'+esc(r.note)+'</small>':'')+'</span><b>−'+mmk(r.amount)+'</b>'+delBtn('debts', r.id)+'</div>';
+  }).join('') : '<p class="muted">'+esc(t('no_debts'))+'</p>';
+}
+function renderProfile(){
+  var p=state.profile||{first:'', last:'', email:''};
+  el('ac-name').textContent = (p.first+' '+p.last).trim();
+  el('ac-email').textContent = p.email||'';
+  var av = el('ac-avatar');
+  if(state.profilePhoto){ av.textContent = ''; av.innerHTML = '<img src="' + state.profilePhoto + '" alt="">'; }
+  else { av.innerHTML = ''; av.textContent = (p.first||'?').slice(0,1).toUpperCase(); }
+  try{ av.title = t('change_photo'); }catch(e){}
+  var rb = el('pf-remove-photo'); if(rb !== DUMMY) rb.style.display = state.profilePhoto ? '' : 'none';
+  el('pf-first').value = p.first||''; el('pf-last').value = p.last||''; el('pf-email').value = p.email||'';
+}
+var THEME_ICONS = {
+  moon:'<path d="M20 13.6A8.6 8.6 0 1 1 10.4 4a7.2 7.2 0 0 0 9.6 9.6z"/>',
+  sun:'<circle cx="12" cy="12" r="4"/><path d="M12 2.8v2.2M12 19v2.2M4.9 4.9l1.6 1.6M17.5 17.5l1.6 1.6M2.8 12H5M19 12h2.2M4.9 19.1l1.6-1.6M17.5 6.5l1.6-1.6"/>'
+};
+function theme(){ return (state && state.theme==='dark') ? 'dark' : 'light'; }
+function applyTheme(){
+  var th = theme();
+  try{ document.documentElement.setAttribute('data-theme', th); document.documentElement.style.colorScheme = th; }catch(e){}
+  var ic = svgI(th==='dark' ? THEME_ICONS.sun : THEME_ICONS.moon);
+  var a1=el('theme-ico-m'); if(a1!==DUMMY) a1.innerHTML=ic;
+  var a2=el('theme-ico-d'); if(a2!==DUMMY) a2.innerHTML=ic;
+  var sw=el('theme-switch'); if(sw!==DUMMY && sw.classList && sw.classList.toggle) sw.classList.toggle('on', th==='dark');
+}
+function toggleTheme(){ state.theme = theme()==='dark' ? 'light' : 'dark'; try{ localStorage.setItem('ncy_theme', state.theme); }catch(e){} apiFetch('POST', '/api/settings', {theme:state.theme}).catch(function(){}); applyTheme(); }
+function renderAll(){
+  renderStatic(); applyTheme();
+  renderHome(); renderActivity(); renderAccounts(); renderAssets(); renderProfile(); renderAdd(); renderMonthly(); renderBrandPicker(); renderMessage(); renderSettingsMsg(); renderSupport();
+}
+
+/* ---- Add screen ---- */
+function catsFor(kind){ return kind==='income' ? INCOME_CATS : EXPENSE_CATS; }
+function setKind(kind){
+  addState.kind = kind;
+  if(catsFor(kind).indexOf(addState.category)<0) addState.category = catsFor(kind)[0];
+  el('tg-expense').classList.toggle('on', kind==='expense');
+  el('tg-income').classList.toggle('on', kind==='income');
+  el('add-title').textContent = kind==='income' ? t('add_income') : t('add_expense');
+  el('add-save').textContent = kind==='income' ? t('add_income') : t('add_expense');
+  renderAdd();
+}
+function setCategory(c){ addState.category=c; renderAdd(); }
+function keyPress(k){
+  if(k==='back'){ addState.amountStr = addState.amountStr.slice(0,-1); }
+  else { if(addState.amountStr.replace(/^0+/,'').length>=12 && addState.amountStr!=='') return; addState.amountStr = (addState.amountStr==='0' ? k.replace(/^0+/,'')||'0' : addState.amountStr + k); if(addState.amountStr.length>13) addState.amountStr=addState.amountStr.slice(0,13); }
+  renderAddAmount();
+}
+function renderAddAmount(){
+  var v = addState.amountStr===''?0:parseInt(addState.amountStr,10);
+  el('add-amount').textContent = fmt(v||0);
+}
+function renderAdd(){
+  renderAddAmount();
+  var ac = el('addcard'); if(ac && ac.classList) ac.classList.toggle('exp-mode', addState.kind==='expense');
+  var cats = catsFor(addState.kind);
+  el('add-catgrid').innerHTML = cats.map(function(c){ return '<button type="button" class="catcell'+(c===addState.category?' on':'')+'" onclick="setCategory(\''+c+'\')"><span class="chip-ico">'+iconFor(c)+'</span><span>'+esc(catLabel(c))+'</span></button>'; }).join('');
+}
+function saveAdd(){
+  var amt = addState.amountStr===''?0:parseInt(addState.amountStr,10);
+  if(!amt || amt<=0){ flash(t('please_enter_amount')); return; }
+  var date = el('add-date').value || todayISO();
+  var note = el('add-note').value || '';
+  var rec = {id:nid(), kind:addState.kind, amount:amt, category:addState.category, txn_date:date, note:note};
+  state.transactions.push(rec);
+  addState.amountStr=''; el('add-note').value='';
+  renderAll(); go('home');
+  flash(t('saved')+' — '+mmk(amt));
+  apiFetch('POST', '/api/transactions', {kind:rec.kind, amount:rec.amount, category:rec.category, txn_date:rec.txn_date, note:rec.note}).then(function(j){
+    if(j && j.id) rec.id = j.id;
+  }).catch(function(e){ apiFail(e); });
+}
+
+/* ---- Physical keyboard for the Add keypad (desktop, Change 3) ---- */
+function addKeyHandler(ev){
+  if(curPage!=='add') return;
+  if(ev.metaKey || ev.ctrlKey || ev.altKey) return;
+  var ae = document.activeElement, tag = ae ? ae.tagName : '';
+  var inField = !!(ae && (tag==='TEXTAREA' || tag==='SELECT' || (tag==='INPUT' && ae.type!=='button' && ae.type!=='checkbox')));
+  if(inField){
+    if(ev.key==='Enter' && ae.id==='add-note'){ ev.preventDefault(); saveAdd(); }
+    return;
+  }
+  if(ev.key.length===1 && ev.key>='0' && ev.key<='9'){ keyPress(ev.key); ev.preventDefault(); }
+  else if(ev.key==='Backspace'){ keyPress('back'); ev.preventDefault(); }
+  else if(ev.key==='Enter'){ ev.preventDefault(); saveAdd(); }
+}
+try{ document.addEventListener('keydown', addKeyHandler); }catch(e){}
+
+/* ---- Manager forms ---- */
+function addAccount(ev){
+  ev.preventDefault();
+  var nm = el('ac-name-in').value.trim(); var bf = brandFor({name:nm, brand:selBrand});
+  var rec = {id:nid(), name:nm, type:el('ac-type-in').value, balance:Number(el('ac-bal-in').value||0), note:el('ac-note-in').value.trim(), brand: bf ? bf.key : ''};
+  state.accounts.push(rec); selBrand='';
+  ev.target.reset(); renderAll(); flash(t('account_added'));
+  apiFetch('POST', '/api/accounts', {name:rec.name, type:rec.type, brand:rec.brand, balance:rec.balance, note:rec.note}).then(function(j){
+    if(j && j.id) rec.id = j.id;
+  }).catch(function(e){ apiFail(e); });
+  return false;
+}
+function addAsset(ev){
+  ev.preventDefault();
+  var rec = {id:nid(), name:el('as-name-in').value.trim(), type:el('as-type-in').value, purchase_price:Number(el('as-buy-in').value||0), current_value:Number(el('as-value-in').value||0), location:el('as-loc-in').value.trim(), note:''};
+  state.assets.push(rec);
+  ev.target.reset(); renderAll(); flash(t('asset_added'));
+  apiFetch('POST', '/api/assets', {name:rec.name, type:rec.type, purchase_price:rec.purchase_price, current_value:rec.current_value, location:rec.location, note:rec.note}).then(function(j){
+    if(j && j.id) rec.id = j.id;
+  }).catch(function(e){ apiFail(e); });
+  return false;
+}
+function addDebt(ev){
+  ev.preventDefault();
+  var rec = {id:nid(), name:el('db-name-in').value.trim(), amount:Number(el('db-amt-in').value||0), note:''};
+  state.debts.push(rec);
+  ev.target.reset(); renderAll(); flash(t('debt_added'));
+  apiFetch('POST', '/api/debts', {name:rec.name, amount:rec.amount, note:rec.note}).then(function(j){
+    if(j && j.id) rec.id = j.id;
+  }).catch(function(e){ apiFail(e); });
+  return false;
+}
+function resetData(){
+  if(!confirm(t('reset_confirm'))) return;
+  apiFetch('POST', '/api/reset').then(function(){
+    state.accounts = []; state.assets = []; state.debts = []; state.transactions = [];
+    _id = 0;
+    addState = {kind:'expense', category:'Food', amountStr:''};
+    applyLang(); renderAll(); flash(t('sample_reset'));
+  }).catch(function(e){ apiFail(e); });
+}
+function toggleProfileForm(){
+  var f=el('profile-form'); f.style.display = (f.style.display==='none'||!f.style.display) ? 'block':'none';
+}
+function saveProfile(ev){
+  ev.preventDefault();
+  var name = (el('pf-first').value.trim()+' '+el('pf-last').value.trim()).trim();
+  if(!name){ errFlash(); return false; }
+  apiFetch('POST', '/api/profile', {name:name}).then(function(){
+    var nm = splitName(name);
+    state.profile.first = nm.first; state.profile.last = nm.last;
+    state.myDisplay = name;
+    el('profile-form').style.display='none'; renderProfile(); flash(t('profile_saved'));
+  }).catch(function(e){ apiFail(e); });
+  return false;
+}
+
+
+/* ================= UI7 Message (user-to-user chat) ================= */
+var dirPeople = [];
+var searchTimer = null;
+var msgView = 'home'; /* home | setup | chat */
+var msgChatUser = '';
+var msgSearch = '';
+var MSG_ICONS = {
+  chat:'<path d="M21 11.5a8.5 8.5 0 0 1-8.5 8.5c-1.5 0-3-.4-4.2-1.1L3 20l1.1-5.3A8.5 8.5 0 1 1 21 11.5z"/><path d="M8.3 10.8h.01M12 10.8h.01M15.7 10.8h.01"/>',
+  search:'<circle cx="11" cy="11" r="6.5"/><path d="M16 16l4.5 4.5"/>',
+  clip:'<path d="M20.5 11.8l-8.6 8.6a5.3 5.3 0 0 1-7.5-7.5l8.9-8.9a3.5 3.5 0 0 1 5 5l-8.6 8.6a1.8 1.8 0 0 1-2.5-2.5l7.9-7.9"/>',
+  send:'<path d="M20.5 3.5L10.2 13.8M20.5 3.5L14 20.5l-3.8-6.7L3.5 10z"/>',
+  file:'<path d="M7 3.8h6.5L18.5 9v11.2H7z"/><path d="M13.2 3.8V9h5.3"/>',
+  back:'<path d="M14.8 5.5L8.3 12l6.5 6.5"/>',
+  share:'<circle cx="6.2" cy="12" r="2.4"/><circle cx="17.4" cy="5.8" r="2.4"/><circle cx="17.4" cy="18.2" r="2.4"/><path d="M8.4 10.8l6.7-3.9M8.4 13.2l6.7 3.9"/>',
+  check:'<path d="M5 12.5l4.5 4.5L19 7.5"/>'
+};
+function personBy(u){ for(var i=0;i<dirPeople.length;i++){ if(dirPeople[i].username===u) return dirPeople[i]; } var cs=state.conversations||[]; for(var j=0;j<cs.length;j++){ if(cs[j].username===u) return {username:u, name:cs[j].name||u}; } return null; }
+function convBy(u){ var cs=state.conversations||[]; for(var i=0;i<cs.length;i++){ if(cs[i].username===u) return cs[i]; } return null; }
+function ensureConv(u){
+  var c=convBy(u); if(c) return c;
+  var p=personBy(u);
+  c={username:u, name:(p&&p.name)||u, messages:[]};
+  if(!state.conversations) state.conversations=[];
+  state.conversations.push(c); return c;
+}
+function nowTime(){ var d=new Date(); return String(d.getHours()).padStart(2,'0')+':'+String(d.getMinutes()).padStart(2,'0'); }
+function goMessage(){
+  stopChatPoll();
+  if(msgView==='chat' || msgView==='setup') msgView='home';
+  go('message');
+}
+function msgShowSetup(){
+  msgView='setup';
+  if(curPage!=='message'){ go('message'); } else { renderMessage(); }
+}
+function msgCancelSetup(){ msgView='home'; renderMessage(); }
+function validateUsername(u){
+  u=String(u||'');
+  var okChars = u.length>=3 && u.length<=20;
+  if(okChars){ for(var ci=0; ci<u.length; ci++){ if('abcdefghijklmnopqrstuvwxyz0123456789_'.indexOf(u.charAt(ci))<0){ okChars=false; break; } } }
+  if(!okChars) return {ok:false, key:'msg_err_invalid'};
+  return {ok:true, key:'msg_available'};
+}
+function msgUserCheck(){
+  var inp=el('mu-name'); var hint=el('mu-hint'); if(inp===DUMMY||hint===DUMMY) return;
+  var v=inp.value;
+  if(!v){ hint.textContent=t('msg_username_hint'); hint.className='msg-hint'; return; }
+  var r=validateUsername(v);
+  hint.textContent=t(r.key); hint.className='msg-hint '+(r.ok?'ok':'err');
+}
+function saveUsername(ev){
+  if(ev && ev.preventDefault) ev.preventDefault();
+  var u=(el('mu-name').value||'').trim();
+  var dn=(el('mu-display').value||'').trim();
+  var r=validateUsername(u);
+  var hint=el('mu-hint');
+  if(!r.ok){ if(hint!==DUMMY){ hint.textContent=t(r.key); hint.className='msg-hint err'; } flash(t(r.key)); return false; }
+  var isNew = !state.myUsername;
+  apiFetch('POST', '/api/username', {username:u}).then(function(j){
+    state.myUsername = (j && j.username) || u;
+    var full = (state.profile ? (state.profile.first+' '+state.profile.last).trim() : '');
+    var done = function(){
+      msgView='home';
+      renderAll();
+      flash(t(isNew?'msg_created':'saved')+' — @'+state.myUsername);
+    };
+    if(dn && dn !== full){
+      apiFetch('POST', '/api/profile', {name:dn}).then(function(){
+        var nm = splitName(dn);
+        if(state.profile){ state.profile.first = nm.first; state.profile.last = nm.last; }
+        state.myDisplay = dn;
+        done();
+      }).catch(function(){ done(); });
+    } else {
+      state.myDisplay = dn || full || state.myUsername;
+      done();
+    }
+  }).catch(function(e){
+    if(e && e.auth) return;
+    var key = (e && e.body && e.body.error==='taken') ? 'msg_err_taken' : ((e && e.body && e.body.error==='invalid') ? 'msg_err_invalid' : null);
+    if(key){ if(hint!==DUMMY){ hint.textContent=t(key); hint.className='msg-hint err'; } flash(t(key)); }
+    else errFlash();
+  });
+  return false;
+}
+function msgSetSearch(v){
+  msgSearch=String(v||'').toLowerCase();
+  if(searchTimer){ clearTimeout(searchTimer); searchTimer=null; }
+  if(!msgSearch){ dirPeople=[]; renderPeople(); return; }
+  var q = msgSearch;
+  searchTimer = setTimeout(function(){
+    apiFetch('GET', '/api/users/search?q='+encodeURIComponent(q)).then(function(j){
+      if(msgSearch !== q) return;
+      var list = (j instanceof Array) ? j : ((j && (j.results || j.users)) || []);
+      dirPeople = list.map(function(p){ return {username:p.username, name:p.name||p.username}; });
+      renderPeople();
+    }).catch(function(){});
+  }, 300);
+}
+function filteredPeople(){
+  if(!msgSearch) return (state.conversations||[]).map(function(c){ return {username:c.username, name:c.name||c.username}; });
+  return dirPeople.slice();
+}
+function avatarHTML(p){
+  var initial = esc(String((p&&p.name) || (p&&p.username) || '?').slice(0,1).toUpperCase());
+  var u = (p && p.username) || '';
+  return '<span class="pavatar"><img src="/api/users/'+encodeURIComponent(u)+'/photo" alt="" onerror="this.style.display=\'none\'">'+initial+'</span>';
+}
+function personRow(p){
+  return '<div class="msgrow">'+avatarHTML(p)+
+    '<span class="tm"><span class="pn">'+esc(p.name)+'</span><span class="pu">@'+esc(p.username)+'</span></span>'+
+    '<button class="msg-openbtn" onclick="openChat(\''+p.username+'\')">'+esc(t('nav_message'))+'</button></div>';
+}
+function renderPeople(){
+  var box=el('msg-results'); if(box===DUMMY) return;
+  var list=filteredPeople();
+  var label = msgSearch ? t('msg_results') : t('msg_people');
+  box.innerHTML = '<div class="lbl" style="margin:2px 2px 2px">'+esc(label)+'</div>'+
+    (list.length ? list.map(personRow).join('') : '<p class="muted" style="margin:8px 2px">'+esc(t('msg_no_results'))+'</p>');
+}
+function lastPreview(c){
+  if(!c.messages.length) return '';
+  var m=c.messages[c.messages.length-1];
+  if(m.type==='text') return m.text;
+  if(m.type==='card') return t('msg_today_costs');
+  return m.name || t('msg_file_label');
+}
+function renderConvs(){
+  var box=el('msg-convs'); if(box===DUMMY) return;
+  var cs=(state.conversations||[]).filter(function(c){ return c.messages && c.messages.length; });
+  cs=cs.slice().sort(function(a,b){
+    var la=a.messages[a.messages.length-1], lb=b.messages[b.messages.length-1];
+    return ((lb.id||0)-(la.id||0)) || String(lb.time||'').localeCompare(String(la.time||''));
+  });
+  box.innerHTML = '<div class="lbl" style="margin:2px 2px 2px">'+esc(t('msg_conversations'))+'</div>'+
+    (cs.length ? cs.map(function(c){
+      var p=personBy(c.username)||{name:c.name||c.username, username:c.username};
+      var last=c.messages[c.messages.length-1];
+      return '<button class="msgrow" onclick="openChat(\''+c.username+'\')">'+avatarHTML({username:c.username, name:p.name})+
+        '<span class="tm"><span class="pn">'+esc(p.name)+'</span><span class="pu">'+esc(lastPreview(c))+'</span></span>'+
+        '<span class="ptime">'+esc(last.time||'')+'</span></button>';
+    }).join('') : '<p class="muted" style="margin:8px 2px">'+esc(t('msg_no_chats'))+'</p>');
+}
+function openChat(u){
+  ensureConv(u);
+  msgChatUser=u; msgView='chat';
+  if(curPage!=='message'){ go('message'); } else { renderMessage(); }
+  loadChatMessages(u);
+  startChatPoll();
+}
+function msgBack(){ stopChatPoll(); msgView='home'; msgChatUser=''; renderMessage(); fetchConvs(); }
+var chatPoll = null;
+function startChatPoll(){ stopChatPoll(); chatPoll = setInterval(pollChat, 4000); }
+function stopChatPoll(){ if(chatPoll){ clearInterval(chatPoll); chatPoll = null; } }
+function pushMsg(u, m){
+  var conv = ensureConv(u);
+  for(var i=0;i<conv.messages.length;i++){ if(conv.messages[i].id===m.id) return conv; }
+  conv.messages.push(m);
+  return conv;
+}
+function appendBubble(m){
+  var box = el('chat-msgs'); if(box===DUMMY) return;
+  box.insertAdjacentHTML('beforeend', bubbleHTML(m));
+  try{ box.scrollTop = 999999; }catch(e){}
+}
+function loadChatMessages(u){
+  apiFetch('GET', '/api/conversations/'+encodeURIComponent(u)+'/messages').then(function(j){
+    var conv = convBy(u); if(!conv) return;
+    conv.messages = (j && j.messages) || [];
+    conv.loaded = true;
+    if(curPage==='message' && msgView==='chat' && msgChatUser===u){
+      var box = el('chat-msgs');
+      if(box!==DUMMY){ box.innerHTML = conv.messages.map(bubbleHTML).join(''); try{ box.scrollTop = 999999; }catch(e){} }
+      renderConvs();
+    }
+  }).catch(function(e){ if(e && e.auth) return; errFlash(); });
+}
+function fetchConvs(){
+  apiFetch('GET', '/api/conversations').then(function(j){
+    var list = (j instanceof Array) ? j : ((j && j.conversations) || []);
+    var byU = {};
+    (state.conversations||[]).forEach(function(c){ byU[c.username] = c; });
+    state.conversations = list.map(function(c){
+      var old = byU[c.username];
+      if(old && old.loaded){ old.name = c.name || old.name; return old; }
+      return {username:c.username, name:c.name||c.username, messages: c.last ? [c.last] : []};
+    });
+    if(curPage==='message') renderConvs();
+  }).catch(function(){});
+}
+function pollChat(){
+  if(curPage!=='message' || msgView!=='chat' || !msgChatUser) return;
+  var conv = convBy(msgChatUser); if(!conv) return;
+  var lastId = 0;
+  conv.messages.forEach(function(m){ if(m.id && m.id > lastId) lastId = m.id; });
+  var u = msgChatUser;
+  apiFetch('GET', '/api/conversations/'+encodeURIComponent(u)+'/messages?after='+lastId).then(function(j){
+    var msgs = (j && j.messages) || []; if(!msgs.length) return;
+    var known = {};
+    conv.messages.forEach(function(m){ known[m.id] = 1; });
+    var added = false;
+    msgs.forEach(function(m){ if(!known[m.id]){ conv.messages.push(m); if(msgChatUser===u && msgView==='chat') appendBubble(m); added = true; } });
+    if(added) renderConvs();
+  }).catch(function(){});
+}
+function sendMsg(){
+  var inp=el('chat-input'); var v=(inp.value||'').trim(); if(!v) return;
+  var to = msgChatUser; if(!to) return;
+  if(inp!==DUMMY) inp.value='';
+  apiFetch('POST', '/api/messages', {to:to, text:v}).then(function(j){
+    if(j && j.message){
+      pushMsg(to, j.message);
+      if(curPage==='message' && msgView==='chat' && msgChatUser===to) appendBubble(j.message);
+      renderConvs();
+    }
+  }).catch(function(e){ if(e && e.auth) return; errFlash(); });
+}
+function chatKey(ev){ if(ev && ev.key==='Enter'){ ev.preventDefault(); sendMsg(); } }
+function todayTotals(){
+  var td=todayISO(), inc=0, exp=0;
+  state.transactions.forEach(function(r){ if(r.txn_date===td){ if(r.kind==='income') inc+=Number(r.amount||0); else exp+=Number(r.amount||0); } });
+  return {income:inc, expense:exp, leftover:inc-exp};
+}
+function shareCosts(){
+  var to = msgChatUser; if(!to) return;
+  apiFetch('POST', '/api/messages', {to:to, type:'card'}).then(function(j){
+    if(j && j.message){
+      pushMsg(to, j.message);
+      if(curPage==='message' && msgView==='chat' && msgChatUser===to) appendBubble(j.message);
+      renderConvs();
+    }
+  }).catch(function(e){ if(e && e.auth) return; errFlash(); });
+}
+function fmtBytes(n){
+  n=Number(n||0);
+  if(n<1024) return n+' B';
+  if(n<1024*1024) return (n/1024).toFixed(1)+' KB';
+  return (n/(1024*1024)).toFixed(1)+' MB';
+}
+function triggerAttach(){ var f=el('chat-file'); try{ if(f!==DUMMY && f.click) f.click(); }catch(e){} }
+function onAttach(input){
+  var file = input && input.files && input.files[0]; if(!file) return;
+  addAttachment(file);
+  try{ input.value=''; }catch(e){}
+}
+function addAttachment(file){
+  var to = msgChatUser; if(!to || !file) return;
+  if(file.size && file.size > 10*1024*1024){ flash(t('support_hint')); return; }
+  var fd = new FormData();
+  fd.append('to', to);
+  fd.append('file', file);
+  apiFetch('POST', '/api/messages', fd, true).then(function(j){
+    if(j && j.message){
+      pushMsg(to, j.message);
+      if(curPage==='message' && msgView==='chat' && msgChatUser===to) appendBubble(j.message);
+      renderConvs();
+    }
+  }).catch(function(e){ if(e && e.auth) return; errFlash(); });
+}
+function msgBody(m){
+  if(m.type==='text') return esc(m.text);
+  if(m.type==='card'){
+    return '<div class="ct">'+esc(t('msg_today_costs'))+' · '+esc(fmtDateISO(m.txn_date))+'</div>'+
+      '<div class="crow"><span>'+esc(t('income'))+'</span><b>'+mmk(m.income)+'</b></div>'+
+      '<div class="crow"><span>'+esc(t('expenses'))+'</span><b class="expv">'+mmk(m.expense)+'</b></div>'+
+      '<div class="crow"><span>'+esc(t('leftover'))+'</span><b>'+mmk(m.leftover)+'</b></div>';
+  }
+  if((m.type==='image'||m.type==='video') && m.url){
+    if(m.type==='image') return '<img class="chat-img" src="'+esc(m.url)+'" alt="'+esc(m.name||'')+'">';
+    return '<video class="chat-vid" controls src="'+esc(m.url)+'"></video>';
+  }
+  var note = (m.type==='image'||m.type==='video') ? '<span class="fs">'+esc(t('msg_attach_session'))+'</span>' : '';
+  return '<span class="filecard"><span class="fic">'+svgI(MSG_ICONS.file)+'</span><span class="tm"><span class="fn">'+esc(m.name||t('msg_file_label'))+'</span><span class="fs">'+esc(t('msg_file_label'))+' · '+esc(fmtBytes(m.size))+'</span>'+note+'</span></span>';
+}
+function bubbleHTML(m){
+  var cls = m.type==='card' ? 'bub me cardmsg' : ('bub '+(m.from==='me'?'me':'them'));
+  return '<div class="'+cls+'">'+msgBody(m)+'<span class="btime">'+esc(m.time||'')+'</span></div>';
+}
+function renderMessage(){
+  var root=el('msg-root'); if(root===DUMMY) return;
+  /* STATE A — gate */
+  if(!state.myUsername && msgView!=='setup'){
+    root.innerHTML =
+      '<div class="card msg-gate">'+
+        '<span class="msg-gate-ico">'+svgI(MSG_ICONS.chat)+'</span>'+
+        '<h3 class="msg-gate-title">'+esc(t('msg_need_username'))+'</h3>'+
+        '<p class="msg-gate-sub">'+esc(t('msg_gate_sub'))+'</p>'+
+        '<button class="msg-plus" onclick="msgShowSetup()" aria-label="'+esc(t('msg_create_username'))+'">'+svgI('<path d="M12 5v14M5 12h14"/>')+'</button>'+
+        '<div class="msg-create-label">'+esc(t('msg_create_username'))+'</div>'+
+      '</div>';
+    return;
+  }
+  /* Username setup / edit form */
+  if(msgView==='setup'){
+    var cur=state.myUsername||'';
+    var dn=state.myDisplay||((state.profile?(state.profile.first+' '+state.profile.last).trim():'')||'');
+    root.innerHTML =
+      '<div class="card msg-setup">'+
+        '<div class="lbl" style="margin-bottom:6px">'+esc(t(cur?'msg_edit_username':'msg_create_username'))+'</div>'+
+        '<form onsubmit="return saveUsername(event)">'+
+          '<div class="field"><label>'+esc(t('msg_username_label'))+'</label>'+
+            '<div class="msg-atwrap"><span class="msg-at">@</span><input id="mu-name" type="text" autocomplete="off" autocapitalize="none" spellcheck="false" placeholder="'+esc(t('msg_username_ph'))+'" value="'+esc(cur)+'" oninput="msgUserCheck()"></div>'+
+            '<div class="msg-hint" id="mu-hint">'+esc(t('msg_username_hint'))+'</div></div>'+
+          '<div class="field"><label>'+esc(t('msg_display_name'))+' ('+esc(t('optional_word'))+')</label><input id="mu-display" type="text" value="'+esc(cur?dn:'')+'" placeholder="'+esc((state.profile?state.profile.first+' '+state.profile.last:'').trim())+'"></div>'+
+          '<button class="btn primary" type="submit" style="width:100%">'+esc(t(cur?'msg_save_username':'msg_create_username'))+'</button>'+
+        '</form>'+
+        (cur?'<button class="btn glassb" style="width:100%;margin-top:10px" onclick="msgCancelSetup()">'+esc(t('msg_back'))+'</button>':'')+
+      '</div>';
+    msgUserCheck();
+    return;
+  }
+  /* MAIN — two-pane on desktop, single-pane on mobile */
+  var left =
+    '<div class="card" style="padding:13px 16px"><div class="msg-userchip"><span class="lbl">'+esc(t('msg_your_username'))+'</span>'+
+      '<span class="msg-atchip">@'+esc(state.myUsername)+'</span>'+
+      (state.myDisplay?'<span class="muted" style="font-size:12.5px">'+esc(state.myDisplay)+'</span>':'')+
+      '<button class="msg-editbtn" onclick="msgShowSetup()">'+esc(t('edit'))+'</button></div></div>'+
+    '<div class="msg-search">'+svgI(MSG_ICONS.search)+'<input type="text" id="msg-search-in" placeholder="'+esc(t('msg_search_ph'))+'" value="'+esc(msgSearch)+'" oninput="msgSetSearch(this.value)"></div>'+
+    '<div class="listcard"><div id="msg-convs"></div></div>'+
+    '<div class="listcard"><div id="msg-results"></div></div>'+
+    '';
+  var right = '';
+  if(msgView==='chat' && msgChatUser){
+    var p2=personBy(msgChatUser)||{name:msgChatUser, username:msgChatUser, tag:''};
+    var conv2=ensureConv(msgChatUser);
+    right =
+      '<div class="chat-head"><button class="chat-back" onclick="msgBack()" aria-label="'+esc(t('msg_back'))+'">'+svgI(MSG_ICONS.back)+'</button>'+
+        avatarHTML(p2)+
+        '<span class="tm"><span class="pn">'+esc(p2.name)+'</span><span class="pu">@'+esc(p2.username)+' · <span class="chat-online">'+esc(t('msg_online'))+'</span></span></span></div>'+
+      '<button class="sharepill" onclick="shareCosts()">'+svgI(MSG_ICONS.share)+esc(t('msg_share_cost'))+'</button>'+
+      '<div class="bubbles" id="chat-msgs">'+conv2.messages.map(bubbleHTML).join('')+'</div>'+
+      '<div class="composer">'+
+        '<button class="attachbtn" onclick="triggerAttach()" aria-label="'+esc(t('msg_attach'))+'">'+svgI(MSG_ICONS.clip)+'</button>'+
+        '<input type="file" id="chat-file" style="display:none" accept="image/*,video/*,.pdf,.doc,.docx,.txt,.zip" onchange="onAttach(this)">'+
+        '<input type="text" id="chat-input" placeholder="'+esc(t('msg_type_ph'))+'" onkeydown="chatKey(event)">'+
+        '<button class="sendbtn" onclick="sendMsg()" aria-label="'+esc(t('msg_send'))+'">'+svgI(MSG_ICONS.send)+'</button>'+
+      '</div>'+
+      '<div class="attach-note">'+esc(t('msg_attach_note'))+'</div>';
+  } else {
+    right = '<div class="msg-empty"><span class="msg-gate-ico">'+svgI(MSG_ICONS.chat)+'</span><p>'+esc(t('msg_select_chat'))+'</p></div>';
+  }
+  root.innerHTML = '<div class="msg-layout'+(msgView==='chat'&&msgChatUser?' chat-open':'')+'"><div class="msg-left">'+left+'</div><div class="msg-right">'+right+'</div></div>';
+  renderConvs();
+  renderPeople();
+  if(msgView==='chat'){ try{ var b=el('chat-msgs'); if(b!==DUMMY && b.scrollTop!==undefined) b.scrollTop=999999; }catch(e){} }
+  return;
+}
+function renderSettingsMsg(){
+  var box=el('settings-msg'); if(box===DUMMY) return;
+  if(state.myUsername){
+    box.innerHTML='<div class="rowbet"><span style="font-size:14px"><span class="muted">'+esc(t('msg_your_username'))+': </span><b>@'+esc(state.myUsername)+'</b></span><button class="msg-editbtn" onclick="msgShowSetup()">'+esc(t('edit'))+'</button></div>';
+  } else {
+    box.innerHTML='<div class="rowbet"><span class="muted" style="font-size:13.5px">'+esc(t('msg_need_username'))+'</span><button class="msg-openbtn" onclick="goMessage();msgShowSetup()">'+esc(t('msg_create_username'))+'</button></div>';
+  }
+}
+
+/* ================= UI12 Support chat (user <-> admin) ================= */
+function ensureSupport(){ if(!state.support || !state.support.messages) state.support = {messages:[]}; return state.support; }
+function renderSupport(){
+  var sup = ensureSupport();
+  var dEl = el('sup-date'); if(dEl !== DUMMY) dEl.textContent = fmtDateObj(new Date(), {weekday:'short', day:'numeric', month:'short', year:'numeric'});
+  try{ var li = document.querySelector('.logo-tile img'); var si = el('sup-logo'); if(li && si !== DUMMY && li.getAttribute('src')) si.setAttribute('src', li.getAttribute('src')); }catch(e){}
+  var box = el('sup-msgs'); if(box === DUMMY) return;
+  var greet = {from:'them', type:'text', text:t('support_greeting'), time:''};
+  box.innerHTML = [greet].concat(sup.messages).map(bubbleHTML).join('');
+}
+var supPoll = null;
+function startSupPoll(){ stopSupPoll(); supPoll = setInterval(syncSupport, 5000); }
+function stopSupPoll(){ if(supPoll){ clearInterval(supPoll); supPoll = null; } }
+function pushSup(m){
+  var sup = ensureSupport();
+  for(var i=0;i<sup.messages.length;i++){ if(sup.messages[i].id===m.id) return; }
+  sup.messages.push(m);
+}
+function appendSupBubble(m){
+  var box = el('sup-msgs'); if(box===DUMMY) return;
+  box.insertAdjacentHTML('beforeend', bubbleHTML(m));
+}
+function syncSupport(){
+  return apiFetch('GET', '/api/support').then(function(j){
+    var msgs = (j && j.messages) || [];
+    var sup = ensureSupport();
+    var known = {};
+    sup.messages.forEach(function(m){ known[m.id] = 1; });
+    msgs.forEach(function(m){
+      if(!known[m.id]){ sup.messages.push(m); if(curPage==='support') appendSupBubble(m); }
+    });
+  }).catch(function(){});
+}
+function sendSupport(){
+  var inp = el('sup-input'); var v = (inp.value || '').trim(); if(!v) return;
+  if(inp !== DUMMY) inp.value = '';
+  apiFetch('POST', '/api/support', {text:v}).then(function(j){
+    if(j && j.message){ pushSup(j.message); if(curPage==='support') appendSupBubble(j.message); }
+    else syncSupport();
+  }).catch(function(e){ if(e && e.auth) return; errFlash(); });
+}
+function supKey(ev){ if(ev && ev.key === 'Enter'){ ev.preventDefault(); sendSupport(); } }
+function triggerSupAttach(){ var f = el('sup-file'); try{ if(f !== DUMMY && f.click) f.click(); }catch(e){} }
+function onSupAttach(input){
+  var file = input && input.files && input.files[0]; if(!file) return;
+  addSupportAttachment(file);
+  try{ input.value = ''; }catch(e){}
+}
+function addSupportAttachment(file){
+  if(!file) return;
+  if(file.size && file.size > 10*1024*1024){ flash(t('support_hint')); return; }
+  var fd = new FormData();
+  fd.append('file', file);
+  apiFetch('POST', '/api/support', fd, true).then(function(j){
+    if(j && j.message){ pushSup(j.message); if(curPage==='support') appendSupBubble(j.message); }
+    else syncSupport();
+  }).catch(function(e){ if(e && e.auth) return; errFlash(); });
+}
+
+/* ================= UI12 Profile photo ================= */
+function applyProfilePhoto(url){
+  if(!url) url = '/api/profile/photo';
+  photoVer++;
+  state.profilePhoto = url + (url.indexOf('?')>=0 ? '&' : '?') + 'v=' + photoVer;
+  if(state.profile) state.profile.photo = true;
+  renderProfile();
+}
+function removeProfilePhoto(){
+  apiFetch('DELETE', '/api/profile/photo').then(function(){
+    state.profilePhoto = '';
+    if(state.profile) state.profile.photo = false;
+    photoVer++;
+    renderProfile();
+  }).catch(function(e){ apiFail(e); });
+}
+function triggerProfilePhoto(){ var f = el('pf-photo-file'); try{ if(f !== DUMMY && f.click) f.click(); }catch(e){} }
+function onProfilePhotoPick(input){
+  var file = input && input.files && input.files[0]; if(!file) return;
+  processProfilePhotoFile(file);
+  try{ input.value = ''; }catch(e){}
+}
+function processProfilePhotoFile(file){
+  if(!file || !file.type || file.type.indexOf('image/') !== 0) return;
+  var fd = new FormData();
+  fd.append('photo', file);
+  apiFetch('POST', '/api/profile/photo', fd, true).then(function(){
+    applyProfilePhoto('/api/profile/photo');
+  }).catch(function(e){ apiFail(e); });
+}
+
+/* ---- init ---- */
+try{ boot(); }catch(e){}
+
+
+</script>
+</body>
+</html>

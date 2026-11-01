@@ -1,0 +1,29 @@
+{% extends "admin/base.html" %}
+{% block content %}
+{% if saved %}<div class="notice">{{ s.settings_saved }}</div>{% endif %}
+<form method="post" action="{{ url_for('admin_settings') }}">
+  <div class="card">
+    <h3>{{ s.nav_settings }}</h3>
+    <p class="sub">{{ s.settings_sub }}</p>
+    <div class="setrow"><div><div class="st">{{ s.set_registration }}</div><div class="ss">{{ s.set_registration_sub }}</div></div>
+      <label class="switch"><input type="checkbox" name="registration_open" value="1" {{ 'checked' if settings.registration_open }}><span class="knob"></span></label></div>
+    <div class="setrow"><div><div class="st">{{ s.set_maintenance }}</div><div class="ss">{{ s.set_maintenance_sub }}</div></div>
+      <label class="switch"><input type="checkbox" name="maintenance" value="1" {{ 'checked' if settings.maintenance }}><span class="knob"></span></label></div>
+    <div class="setrow"><div><div class="st">{{ s.set_messages }}</div><div class="ss">{{ s.set_messages_sub }}</div></div>
+      <label class="switch"><input type="checkbox" name="allow_messages" value="1" {{ 'checked' if settings.allow_messages }}><span class="knob"></span></label></div>
+    <button class="savebtn" type="submit">{{ s.save }}</button>
+  </div>
+</form>
+<div class="card">
+  <h3>{{ s.admin_account }}</h3>
+  <div class="admin-prof" style="margin-top:8px">
+    <span class="avatar">{{ initials(admin.name) }}</span>
+    <div><div class="an">{{ admin.name }}</div>
+    <div class="ar">{{ admin.email }} · {{ s.admin_role }}: {{ s.role_owner }}</div></div>
+  </div>
+</div>
+<div class="notecard">
+  <h3>{{ s.admin_note_title }}</h3>
+  <p>{{ s.admin_note }}</p>
+</div>
+{% endblock %}

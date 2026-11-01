@@ -1,0 +1,91 @@
+{% extends "admin/base.html" %}
+{% block content %}
+<div class="card">
+  <h3>{{ s.nav_users }}</h3>
+  <p class="sub">{{ s.users_sub }}</p>
+  <form class="searchline" method="get" action="{{ url_for('admin_users') }}">
+    <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.8-3.8"/></svg>
+    <input name="q" type="text" autocomplete="off" placeholder="{{ s.users_search_ph }}" value="{{ q }}">
+  </form>
+  {% if users %}
+  <div class="tablewrap"><table>
+    <thead><tr>
+      <th>{{ s.col_user }}</th><th>{{ s.col_joined }}</th><th>{{ s.col_txns }}</th>
+      <th>{{ s.col_networth }}</th><th>{{ s.col_status }}</th><th>{{ s.col_action }}</th>
+    </tr></thead>
+    <tbody>
+    {% for u in users %}
+      <tr>
+        <td><div class="ucell"><span class="avatar">{{ initials(u.name) }}</span>
+          <div><div style="font-weight:600">{{ u.name }}</div>
+          <div class="muted" style="font-size:12.5px">{% if u.username %}@{{ u.username }}{% else %}{{ u.email }}{% endif %}</div></div></div></td>
+        <td>{{ (u.created_at or '')[:10] }}</td>
+        <td class="num">{{ "{:,}".format(u.txn_count or 0) }}</td>
+        <td class="num" style="font-weight:700">{{ "{:,}".format(u.net_worth or 0) }}</td>
+        <td>{% if u.suspended %}<span class="pill off">{{ s.status_suspended }}</span>{% else %}<span class="pill on">{{ s.status_active }}</span>{% endif %}</td>
+        <td style="white-space:nowrap">
+          <button type="button" class="abtn" data-view
+            data-name="{{ u.name }}" data-email="{{ u.email }}"
+            data-username="{{ u.username or '' }}" data-role="{{ u.role }}"
+            data-joined="{{ (u.created_at or '')[:10] }}"
+            data-txns="{{ u.txn_count or 0 }}"
+            data-net="{{ '{:,}'.format(u.net_worth or 0) }}"
+            data-status="{{ s.status_suspended if u.suspended else s.status_active }}">{{ s.act_view }}</button>
+          {% if u.suspended %}
+          <form method="post" action="{{ url_for('admin_user_activate', user_id=u.id) }}" style="display:inline">
+            <input type="hidden" name="q" value="{{ q }}"><button class="abtn" type="submit">{{ s.act_activate }}</button>
+          </form>
+          {% elif u.id != admin.id %}
+          <form method="post" action="{{ url_for('admin_user_suspend', user_id=u.id) }}" style="display:inline">
+            <input type="hidden" name="q" value="{{ q }}"><button class="abtn warn" type="submit">{{ s.act_suspend }}</button>
+          </form>
+          {% endif %}
+        </td>
+      </tr>
+    {% endfor %}
+    </tbody>
+  </table></div>
+  {% else %}
+  <p class="empty">{{ s.no_results if q else s.empty_users }}</p>
+  {% endif %}
+</div>
+
+<div class="modal" id="userModal">
+  <div class="mbox">
+    <div style="display:flex;align-items:center;gap:12px;margin-bottom:10px">
+      <span class="avatar" id="mAvatar">?</span>
+      <div><h3 id="mName"></h3><div class="muted" id="mUser" style="font-size:13px"></div></div>
+    </div>
+    <div class="kv"><span class="k">{{ s.col_email }}</span><span class="v" id="mEmail"></span></div>
+    <div class="kv"><span class="k">{{ s.col_username }}</span><span class="v" id="mUsername"></span></div>
+    <div class="kv"><span class="k">{{ s.col_role }}</span><span class="v" id="mRole"></span></div>
+    <div class="kv"><span class="k">{{ s.col_joined }}</span><span class="v" id="mJoined"></span></div>
+    <div class="kv"><span class="k">{{ s.col_txns }}</span><span class="v num" id="mTxns"></span></div>
+    <div class="kv"><span class="k">{{ s.col_networth }}</span><span class="v num" id="mNet"></span></div>
+    <div class="kv"><span class="k">{{ s.col_status }}</span><span class="v" id="mStatus"></span></div>
+    <button class="abtn" id="mClose" style="margin-top:16px;width:100%;padding:10px">{{ s.close }}</button>
+  </div>
+</div>
+{% endblock %}
+{% block scripts %}
+<script>
+document.querySelectorAll('[data-view]').forEach(function(b){
+  b.addEventListener('click',function(){
+    function ini(n){return (n||'?').trim().split(/\s+/).slice(0,2).map(function(w){return w[0];}).join('').toUpperCase();}
+    document.getElementById('mAvatar').textContent=ini(b.dataset.name);
+    document.getElementById('mName').textContent=b.dataset.name;
+    document.getElementById('mUser').textContent=b.dataset.username?('@'+b.dataset.username):'';
+    document.getElementById('mEmail').textContent=b.dataset.email;
+    document.getElementById('mUsername').textContent=b.dataset.username?('@'+b.dataset.username):'—';
+    document.getElementById('mRole').textContent=b.dataset.role;
+    document.getElementById('mJoined').textContent=b.dataset.joined;
+    document.getElementById('mTxns').textContent=b.dataset.txns;
+    document.getElementById('mNet').textContent=b.dataset.net;
+    document.getElementById('mStatus').textContent=b.dataset.status;
+    document.getElementById('userModal').classList.add('open');
+  });
+});
+document.getElementById('mClose').addEventListener('click',function(){document.getElementById('userModal').classList.remove('open');});
+document.getElementById('userModal').addEventListener('click',function(e){if(e.target===this)this.classList.remove('open');});
+</script>
+{% endblock %}

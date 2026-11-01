@@ -1,0 +1,107 @@
+{% extends "admin/base.html" %}
+{% block content %}
+{% set pin_svg = '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 3.5h6V10l2.2 3.2H6.8L9 10z"/><path d="M12 13.2V20.5"/></svg>' %}
+{% set pin_big = '<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M9 3.5h6V10l2.2 3.2H6.8L9 10z"/><path d="M12 13.2V20.5"/></svg>' %}
+{% set file_svg = '<svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8z"/><path d="M14 3v5h5"/></svg>' %}
+<div class="supcard {{ 'show-conv' if thread_user else '' }}" id="supCard">
+  <div class="sup-left">
+    <form class="searchline" style="margin:14px 14px 6px" method="get" action="{{ url_for('admin_support') }}">
+      <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.8-3.8"/></svg>
+      <input name="q" type="text" autocomplete="off" placeholder="{{ s.sup_search_ph }}" value="{{ q }}">
+    </form>
+    <div class="sup-list">
+      {% if threads %}
+        {% for t in threads %}
+        <a class="sup-thread {{ 'sel' if thread_user and t.user.id==thread_user.id else '' }}" href="{{ url_for('admin_support_thread', user_id=t.user.id, q=q) }}">
+          <span class="avatar">{{ initials(t.user.name) }}</span>
+          <span class="st-main">
+            <span class="st-top"><span class="st-user">{{ t.user.username or t.user.name }}</span>
+            <span class="st-time">{{ (t.day ~ ' · ') if t.day else '' }}{{ t.time }}</span></span>
+            <span class="st-snip">{{ t.preview }}</span>
+          </span>
+          <span class="st-pin {{ 'on' if t.pinned_any else '' }}">{{ pin_big|safe }}</span>
+        </a>
+        {% endfor %}
+      {% else %}
+        <p class="empty" style="padding:14px">{{ s.empty_threads }}</p>
+      {% endif %}
+    </div>
+  </div>
+  <div class="sup-right">
+    {% if thread_user %}
+    <div class="sup-head">
+      <a class="iconbtn sup-back" href="{{ url_for('admin_support') }}" aria-label="{{ s.sup_back }}"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14.5 5 8 12l6.5 7"/></svg></a>
+      <span class="avatar">{{ initials(thread_user.name) }}</span>
+      <div style="min-width:0">
+        <div class="sup-un">{{ thread_user.username or thread_user.name }}</div>
+        <div class="sup-sub">{{ s.sup_conv_sub }}</div>
+      </div>
+      <span class="sup-pill"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12a8 8 0 0 1-8 8H4l2.2-2.9A8 8 0 1 1 21 12Z"/></svg><span>{{ s.sup_thread_pill }}</span></span>
+    </div>
+    <div class="sup-msgs" id="supMsgs">
+      {% if items %}
+        {% for it in items %}
+          {% if it.type=='divider' %}
+          <div class="sup-divider">{{ it.label }}</div>
+          {% else %}
+            {% set m = it.m %}
+            {% if m.sender=='admin' %}
+            <div class="msgrow me"><div class="msgcol">
+              <div class="bub {{ 'pinned' if m.pinned else '' }}">
+                {% if m.file_path %}
+                  {% if m.type=='image' %}<a href="/uploads/{{ m.file_path }}"><img class="attachimg" src="/uploads/{{ m.file_path }}" alt=""></a>{% endif %}
+                  {% if m.text %}<div style="margin-bottom:8px">{{ m.text }}</div>{% endif %}
+                  <span class="attachcard"><span class="afile">{{ file_svg|safe }}</span><span><span class="an2">{{ m.file_name }}</span>{% if m.file_size %}<br><span class="as2">{{ m.file_size }} B</span>{% endif %}</span></span>
+                {% else %}{{ m.text }}{% endif %}
+              </div>
+              <div class="msgmeta"><span>&#10003; {{ s.sup_admin }} · {{ it.time }}</span>
+                <form method="post" action="{{ url_for('admin_support_pin', user_id=thread_user.id, msg_id=m.id) }}" style="display:inline"><button class="pinbtn {{ 'on' if m.pinned else '' }}" type="submit">{{ pin_svg|safe }}<span>{{ s.sup_pin }}</span></button></form>
+              </div>
+            </div></div>
+            {% else %}
+            <div class="msgrow them"><span class="avatar sm">{{ initials(thread_user.name) }}</span><div class="msgcol">
+              <div class="bub {{ 'pinned' if m.pinned else '' }}">
+                {% if m.file_path %}
+                  {% if m.type=='image' %}<a href="/uploads/{{ m.file_path }}"><img class="attachimg" src="/uploads/{{ m.file_path }}" alt=""></a>{% endif %}
+                  {% if m.text %}<div style="margin-bottom:8px">{{ m.text }}</div>{% endif %}
+                  <span class="attachcard"><span class="afile">{{ file_svg|safe }}</span><span><span class="an2">{{ m.file_name }}</span>{% if m.file_size %}<br><span class="as2">{{ m.file_size }} B</span>{% endif %}</span></span>
+                {% else %}{{ m.text }}{% endif %}
+              </div>
+              <div class="msgmeta"><span>{{ thread_user.username or thread_user.name }} · {{ it.time }}</span>
+                <form method="post" action="{{ url_for('admin_support_pin', user_id=thread_user.id, msg_id=m.id) }}" style="display:inline"><button class="pinbtn {{ 'on' if m.pinned else '' }}" type="submit">{{ pin_svg|safe }}<span>{{ s.sup_pin }}</span></button></form>
+              </div>
+            </div></div>
+            {% endif %}
+          {% endif %}
+        {% endfor %}
+      {% else %}
+        <p class="empty" style="margin:auto">{{ s.empty_thread }}</p>
+      {% endif %}
+    </div>
+    <div class="sup-composer">
+      <form class="sup-crow" method="post" enctype="multipart/form-data" action="{{ url_for('admin_support_reply', user_id=thread_user.id) }}">
+        <label class="iconbtn sup-attach" for="supFile" aria-label="Attach"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.5l-8.5 8.5a5.5 5.5 0 0 1-7.8-7.8L13 4.9a3.7 3.7 0 0 1 5.2 5.2l-8.2 8.2a1.85 1.85 0 0 1-2.6-2.6l7.4-7.4"/></svg></label>
+        <input type="file" name="file" id="supFile" style="display:none">
+        <input id="supInput" name="text" type="text" autocomplete="off" placeholder="{{ s.sup_reply_ph.replace('{u}', thread_user.username or thread_user.name) }}">
+        <button class="sup-send" type="submit" aria-label="Send"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M21 3 10.2 13.8"/><path d="M21 3l-6.8 18-3.4-7.2L3.6 10.4z"/></svg></button>
+      </form>
+      <p class="sup-hint">{{ s.sup_attach_hint }} <span id="supFileName"></span></p>
+    </div>
+    {% else %}
+    <div style="margin:auto;padding:24px;text-align:center" class="muted">{{ s.select_thread }}</div>
+    {% endif %}
+  </div>
+</div>
+{% endblock %}
+{% block scripts %}
+<script>
+(function(){
+  var box=document.getElementById('supMsgs');
+  if(box){box.scrollTop=box.scrollHeight;}
+  var f=document.getElementById('supFile');
+  if(f){f.addEventListener('change',function(){var n=document.getElementById('supFileName');if(n)n.textContent=f.files&&f.files[0]?('· '+f.files[0].name):'';});}
+  var back=document.querySelector('.sup-back');
+  /* mobile: back link returns to thread list (plain navigation) */
+})();
+</script>
+{% endblock %}

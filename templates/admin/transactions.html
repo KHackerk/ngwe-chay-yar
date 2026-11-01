@@ -1,0 +1,31 @@
+{% extends "admin/base.html" %}
+{% block content %}
+<div class="card">
+  <h3>{{ s.nav_transactions }}</h3>
+  <p class="sub">{{ s.txn_sub }}</p>
+  <div class="pills">
+    <a class="fpill {{ 'active' if filter=='all' }}" href="{{ url_for('admin_transactions', filter='all') }}">{{ s.txn_all }}</a>
+    <a class="fpill {{ 'active' if filter=='income' }}" href="{{ url_for('admin_transactions', filter='income') }}">{{ s.txn_income }}</a>
+    <a class="fpill {{ 'active' if filter=='expense' }}" href="{{ url_for('admin_transactions', filter='expense') }}">{{ s.txn_expenses }}</a>
+  </div>
+  {% if txns %}
+  <div class="tablewrap"><table>
+    <thead><tr>
+      <th>{{ s.col_date }}</th><th>{{ s.col_user }}</th><th>{{ s.col_category }}</th>
+      <th>{{ s.col_note }}</th><th>{{ s.col_amount }}</th>
+    </tr></thead>
+    <tbody>
+    {% for t in txns %}
+      <tr>
+        <td>{{ t.txn_date }}</td>
+        <td style="font-weight:600">{{ t.user_name }}</td>
+        <td>{{ t.category }}</td>
+        <td class="muted">{{ t.note }}</td>
+        <td class="num" style="font-weight:700;color:var(--{{ 'green' if t.kind=='income' else 'exp-red' }})">{{ '+' if t.kind=='income' else '−' }}{{ "{:,}".format(t.amount) }}</td>
+      </tr>
+    {% endfor %}
+    </tbody>
+  </table></div>
+  {% else %}<p class="empty">{{ s.empty_txn }}</p>{% endif %}
+</div>
+{% endblock %}

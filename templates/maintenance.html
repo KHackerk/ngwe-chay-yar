@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html lang="my">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="color-scheme" content="dark">
+<title>{{ s.maintenance_title }} — Ngwe Chay Yar</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: -apple-system, "Segoe UI", Roboto, "Noto Sans Myanmar", sans-serif;
+    background: #050807; color: #fff; min-height: 100vh;
+    display: flex; align-items: center; justify-content: center; padding: 24px 18px;
+    background-image:
+      radial-gradient(600px 300px at 15% 8%, rgba(34,197,94,.25), transparent 60%),
+      radial-gradient(700px 380px at 88% 90%, rgba(22,163,74,.2), transparent 60%);
+  }
+  .card { width: 100%; max-width: 400px; text-align: center; }
+  .logo img { width: 92px; height: 92px; border-radius: 22px; object-fit: cover;
+    box-shadow: 0 10px 34px rgba(34,197,94,.25); }
+  h1 { font-size: 25px; margin: 20px 0 10px; line-height: 1.6; }
+  p { color: #9ca3af; font-size: 15px; line-height: 1.9; }
+  @media (min-width: 1024px) {
+    .card { max-width: 430px; padding: 44px 42px; border-radius: 26px;
+      background: rgba(255,255,255,.055); border: 1px solid rgba(255,255,255,.13);
+      backdrop-filter: blur(18px); -webkit-backdrop-filter: blur(18px); }
+  }
+</style>
+</head>
+<body>
+  <main class="card">
+    <div class="logo"><img src="/static/img/logo-256.png" alt="Ngwe Chay Yar"></div>
+    <h1>{{ s.maintenance_title }}</h1>
+    <p>{{ s.maintenance_msg }}</p>
+  </main>
+</body>
+</html>

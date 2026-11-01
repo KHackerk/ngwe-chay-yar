@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html lang="{{ lang }}">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="color-scheme" content="dark">
+<title>{{ s.login_title }} — Ngwe Chay Yar</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html, body { height: 100%; }
+  body {
+    font-family: -apple-system, "Segoe UI", Roboto, "Noto Sans Myanmar", sans-serif;
+    background: #050807; color: #fff; min-height: 100vh;
+    display: flex; align-items: center; justify-content: center;
+    padding: 24px 18px; position: relative; overflow-x: hidden;
+  }
+  /* Emerald light streaks (CSS only) */
+  body::before, body::after {
+    content: ""; position: fixed; inset: 0; pointer-events: none;
+  }
+  body::before {
+    background:
+      radial-gradient(600px 300px at 15% 8%, rgba(34,197,94,.28), transparent 60%),
+      radial-gradient(700px 380px at 88% 90%, rgba(22,163,74,.22), transparent 60%),
+      radial-gradient(420px 220px at 78% 12%, rgba(74,222,128,.14), transparent 60%);
+  }
+  body::after {
+    background: linear-gradient(115deg, transparent 42%, rgba(34,197,94,.07) 50%, transparent 58%),
+                linear-gradient(115deg, transparent 62%, rgba(255,255,255,.04) 68%, transparent 74%);
+  }
+  .card { position: relative; z-index: 1; width: 100%; max-width: 400px; }
+  .lang-toggle { position: absolute; top: 18px; right: 20px; z-index: 2; font-size: 13px; }
+  .lang-toggle a { color: #9ca3af; text-decoration: none; margin-left: 10px; }
+  .lang-toggle a.active { color: #22c55e; font-weight: 600; }
+  .logo { display: flex; justify-content: center; margin-bottom: 18px; }
+  .logo img { width: 92px; height: 92px; border-radius: 22px; object-fit: cover;
+    box-shadow: 0 10px 34px rgba(34,197,94,.25); }
+  h1 { font-size: 27px; font-weight: 700; text-align: center; line-height: 1.5; }
+  .sub { text-align: center; color: #9ca3af; font-size: 14px; margin: 6px 0 26px; line-height: 1.7; }
+  .admin-note { text-align: center; color: #22c55e; font-size: 13px; font-weight: 600;
+    letter-spacing: .04em; text-transform: uppercase; margin-bottom: 10px; }
+  .error { background: rgba(239,68,68,.13); border: 1px solid rgba(239,68,68,.45);
+    color: #fca5a5; border-radius: 12px; padding: 11px 14px; font-size: 14px;
+    margin-bottom: 16px; line-height: 1.7; }
+  label { display: block; font-size: 13px; color: #d1d5db; margin: 0 0 7px 4px; }
+  .field { margin-bottom: 15px; }
+  input[type=email], input[type=password], input[type=text] {
+    width: 100%; border: 1px solid rgba(255,255,255,.12); outline: none;
+    background: rgba(255,255,255,.07); color: #fff; font-size: 16px;
+    padding: 15px 20px; border-radius: 999px;
+  }
+  input:focus { border-color: #22c55e; background: rgba(255,255,255,.1); }
+  input::placeholder { color: #6b7280; }
+  button.submit {
+    width: 100%; border: none; cursor: pointer; margin-top: 6px;
+    background: linear-gradient(180deg, #22c55e, #16a34a); color: #fff;
+    font-size: 16px; font-weight: 700; padding: 15px; border-radius: 999px;
+    box-shadow: 0 10px 26px rgba(34,197,94,.35);
+  }
+  button.submit:active { transform: scale(.99); }
+  .switch { text-align: center; margin-top: 22px; font-size: 14px; color: #9ca3af; }
+  .switch a { color: #22c55e; text-decoration: none; font-weight: 600; }
+  @media (min-width: 1024px) {
+    .card {
+      max-width: 430px; padding: 44px 42px 38px; border-radius: 26px;
+      background: rgba(255,255,255,.055);
+      border: 1px solid rgba(255,255,255,.13);
+      backdrop-filter: blur(18px); -webkit-backdrop-filter: blur(18px);
+      box-shadow: 0 30px 80px rgba(0,0,0,.6);
+    }
+  }
+</style>
+</head>
+<body>
+  <div class="lang-toggle">
+    <a href="?lang=my" class="{% if lang == 'my' %}active{% endif %}">မြန်မာ</a>
+    <a href="?lang=en" class="{% if lang == 'en' %}active{% endif %}">EN</a>
+  </div>
+  <main class="card">
+    <div class="logo"><img src="/static/img/logo-256.png" alt="Ngwe Chay Yar"></div>
+    {% if admin_note %}<div class="admin-note">{{ s.admin_note }}</div>{% endif %}
+    <h1>{{ s.login_title }}</h1>
+    <p class="sub">{{ s.login_sub }}</p>
+    {% if error %}<div class="error">{{ error }}</div>{% endif %}
+    <form method="post" action="/login{% if request.args.get('next') %}?next={{ request.args.get('next') }}{% endif %}">
+      <div class="field">
+        <label for="email">{{ s.email }}</label>
+        <input id="email" type="email" name="email" required autocomplete="email"
+               value="{{ request.form.get('email', '') }}" placeholder="you@example.com">
+      </div>
+      <div class="field">
+        <label for="password">{{ s.password }}</label>
+        <input id="password" type="password" name="password" required autocomplete="current-password" placeholder="••••••••">
+      </div>
+      <button class="submit" type="submit">{{ s.login_btn }}</button>
+    </form>
+    <p class="switch">{{ s.no_account }} <a href="/register">{{ s.create_one }}</a></p>
+  </main>
+</body>
+</html>
