@@ -319,6 +319,44 @@ def main():
           and ".about-col{max-width:720px" in spa
           and "#page-debts .card" in spa)
 
+    # ---- static SPA structure: UI14 Add no-scroll fit + admin doorway ----
+    add_i = spa.find('id="page-add"')
+    add_j = spa.find('id="page-support"', add_i)
+    add_sec = spa[add_i:add_j] if 0 < add_i < add_j else ""
+    check("static: Add page is a height-bounded flex column (mobile dvh + "
+          "desktop vh) with the submit inside the fitted column",
+          "#page-add.active{display:flex;flex-direction:column;"
+          "height:calc(100dvh - 166px)}" in spa
+          and "#page-add.active{display:flex;flex-direction:column;"
+          "height:calc(100vh - 220px)" in spa
+          and ".addcard{flex:1;min-height:0;display:flex;"
+          "flex-direction:column" in spa
+          and 'id="keypad"' in add_sec and 'id="add-save"' in add_sec
+          and 'class="walletwrap"' in add_sec)
+    check("static: Add keypad flexes — rows shrink to fit, keys are "
+          "dvh-clamp sized with a 60px cap (never the old fixed 66px rows)",
+          "grid-template-rows:repeat(4,minmax(0,1fr))" in spa
+          and ".addcard .keypad{flex:1 1 auto;min-height:0" in spa
+          and "height:min(clamp(44px,6.2dvh,60px),100%)" in spa
+          and "max-height:60px;aspect-ratio:1/1" in spa)
+    check("static: Date/Note fields are non-overlapping flex children "
+          "(min-width:0 on fields and on the inputs themselves)",
+          ".daterow{display:flex;gap:10px}" in spa
+          and ".daterow .field{flex:1 1 0;min-width:0;margin:0}" in spa
+          and ".daterow .field.note-f{flex:1.25 1 0}" in spa
+          and ".daterow .field input{min-width:0;max-width:100%}" in spa)
+    check("static: Admin Dashboard doorway rows (Account menu + desktop "
+          "sidebar) ship hidden and are revealed only for role=admin; "
+          "they are plain links to /admin (separate admin gate untouched)",
+          'id="ac-admin-row" style="display:none"' in acct_sec
+          and 'id="side-admin-row" style="display:none"' in spa
+          and spa.count('data-i18n="admin_dashboard"') == 2
+          and spa.count("location.href='/admin'") == 2
+          and "state.profile.role==='admin'" in spa
+          and "'ac-admin-row','side-admin-row'" in spa)
+    check("static: admin_dashboard i18n key present in all 4 languages",
+          all("admin_dashboard" in s for s in key_sets.values()))
+
     # ---- boot --------------------------------------------------------------
     env = dict(os.environ)
     env["DATABASE_URL"] = f"sqlite:///{DB_PATH}"
