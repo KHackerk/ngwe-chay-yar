@@ -249,16 +249,55 @@ def _ctx(page, lang, admin, **kw):
     return ctx
 
 
+# ---------------------------------------------------------------------------
+# Separate admin session gate.
+#
+# /admin has its OWN sign-in, independent of the main app session: being
+# signed into the app (even as an admin) does NOT open the dashboard.
+# A successful POST to /admin/login stamps three session keys:
+#   admin_uid — the admin account's user id (the guard's identity source;
+#               the app session's user is irrelevant and untouched)
+#   admin_ok  — True
+#   admin_at  — epoch seconds of the admin login (12 h lifetime)
+# Every guarded request re-validates that the stamped account still
+# exists, still has role='admin' and is not suspended.
+# ---------------------------------------------------------------------------
+ADMIN_SESSION_TTL = 12 * 3600  # 12 hours
+
+
+def _clear_admin_session():
+    for key in ('admin_uid', 'admin_ok', 'admin_at'):
+        session.pop(key, None)
+
+
+def _admin_session_user():
+    """Return the admin-session user row, or None when the gate is shut."""
+    if not session.get('admin_ok'):
+        return None
+    try:
+        at = int(session.get('admin_at') or 0)
+    except (TypeError, ValueError):
+        at = 0
+    if not at or time.time() - at > ADMIN_SESSION_TTL:
+        _clear_admin_session()
+        return None
+    uid = session.get('admin_uid')
+    if not uid:
+        return None
+    user = db.q1("SELECT * FROM users WHERE id=?", (uid,))
+    if not user or user.get('role') != 'admin' or user.get('suspended'):
+        return None
+    return user
+
+
 def admin_guard(view):
-    """Signed-out -> /admin/login. Signed-in non-admin -> /admin/login
-    with a 'not_admin' error (consistent guard behaviour everywhere)."""
+    """Every /admin page and action sits behind the separate admin
+    session gate (see above). No valid admin session -> /admin/login."""
     @wraps(view)
     def wrapped(*args, **kwargs):
-        user = current_user()
+        user = _admin_session_user()
         if not user:
             return redirect(url_for('admin_login'))
-        if user.get('role') != 'admin':
-            return redirect(url_for('admin_login', error='not_admin'))
         return view(user, *args, **kwargs)
     return wrapped
 
@@ -315,13 +354,15 @@ def register(app):
                         samesite='Lax')
         return resp
 
-    # ---------------- login ----------------
+    # ---------------- login / logout ----------------
     @app.route('/admin/login', methods=['GET', 'POST'])
     def admin_login():
         lang = _lang()
         s = _s(lang)
-        user = current_user()
-        if user and user.get('role') == 'admin' and request.method == 'GET':
+        # Already through the admin gate -> straight to the dashboard.
+        # A merely app-signed-in admin does NOT qualify: without a valid
+        # admin session the credentials form is always shown.
+        if request.method == 'GET' and _admin_session_user():
             return redirect(url_for('admin_overview'))
         error = None
         err_code = request.args.get('error')
@@ -339,7 +380,11 @@ def register(app):
             elif row.get('role') != 'admin':
                 error = s['login_error_not_admin']
             else:
-                session['uid'] = row['id']
+                # Stamp the separate admin session. The main app session
+                # (session['uid']) is deliberately left exactly as it was.
+                session['admin_uid'] = row['id']
+                session['admin_ok'] = True
+                session['admin_at'] = int(time.time())
                 nxt = request.args.get('next') or ''
                 if nxt.startswith('/admin'):
                     return redirect(nxt)
@@ -350,6 +395,12 @@ def register(app):
             resp.set_cookie('admin_lang', lang, max_age=365 * 24 * 3600,
                             samesite='Lax')
         return resp
+
+    @app.route('/admin/logout')
+    def admin_logout():
+        """Clear ONLY the admin session; the main app session stays."""
+        _clear_admin_session()
+        return redirect(url_for('admin_login'))
 
     # ---------------- overview ----------------
     @app.route('/admin/overview')
@@ -439,9 +490,17 @@ def register(app):
     def admin_users(admin):
         lang = _lang()
         q = (request.args.get('q') or '').strip()
+        # Net worth with COMPUTED wallet balances: each account counts
+        # its opening balance plus its linked income minus linked
+        # expenses (the second term adds the signed sum over ALL of the
+        # user's linked transactions, which distributes exactly over the
+        # accounts). Matches /api/state's per-account computation.
         net_expr = (
             "(SELECT COALESCE(SUM(balance),0) FROM accounts"
             "  WHERE user_id=u.id)"
+            " + (SELECT COALESCE(SUM(CASE WHEN kind='income' THEN amount"
+            "  ELSE -amount END),0) FROM transactions"
+            "  WHERE user_id=u.id AND account_id IS NOT NULL)"
             " + (SELECT COALESCE(SUM(current_value),0) FROM assets"
             "  WHERE user_id=u.id)"
             " - (SELECT COALESCE(SUM(amount),0) FROM debts"

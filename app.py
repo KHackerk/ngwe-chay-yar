@@ -258,16 +258,33 @@ def _txn(row):
         "category": row["category"],
         "txn_date": row["txn_date"],
         "note": row.get("note") or "",
+        "account_id": row.get("account_id"),
     }
 
 
-def _account(row):
+def _account_deltas(uid):
+    """Per-account signed sum of linked transactions (income +, expense -)."""
+    rows = db.q(
+        "SELECT account_id, "
+        "SUM(CASE WHEN kind = 'income' THEN amount ELSE -amount END) "
+        "AS delta FROM transactions WHERE user_id = ? "
+        "AND account_id IS NOT NULL GROUP BY account_id", (uid,))
+    return {r["account_id"]: int(r["delta"] or 0) for r in rows}
+
+
+def _account(row, delta=0):
+    """accounts.balance in the DB is the OPENING balance (what the user
+    typed when creating/editing the account). The API exposes `balance`
+    as the computed CURRENT balance (opening + linked income - linked
+    expenses) and `opening_balance` for the edit form."""
+    opening = int(row["balance"] or 0)
     return {
         "id": row["id"],
         "name": row["name"],
         "type": row["type"],
         "brand": row.get("brand") or "",
-        "balance": row["balance"],
+        "balance": opening + int(delta or 0),
+        "opening_balance": opening,
         "note": row.get("note") or "",
     }
 
@@ -321,6 +338,8 @@ def _msg(row, my_id):
         "leftover": card.get("leftover"),
         "items": card.get("items"),
         "txn_date": card.get("txn_date", ""),
+        "scope": card.get("scope"),
+        "month": card.get("month", ""),
         "time": _time_of(row.get("created_at") or ""),
         "ts": row.get("created_at") or "",
     }
@@ -441,6 +460,7 @@ def api_state():
     debts = db.q("SELECT * FROM debts WHERE user_id = ? ORDER BY id", (uid,))
     support = db.q(
         "SELECT * FROM support_messages WHERE user_id = ? ORDER BY id", (uid,))
+    deltas = _account_deltas(uid)
     return jsonify({
         "profile": {
             "name": user["name"],
@@ -453,7 +473,7 @@ def api_state():
             "lang": user.get("lang") or "my",
             "theme": user.get("theme") or "light",
         },
-        "accounts": [_account(r) for r in accounts],
+        "accounts": [_account(r, deltas.get(r["id"], 0)) for r in accounts],
         "assets": [_asset(r) for r in assets],
         "debts": [_debt(r) for r in debts],
         "transactions": [_txn(r) for r in txns],
@@ -472,12 +492,23 @@ def api_add_transaction():
     amount = _int(data.get("amount"), 0)
     if kind not in ("income", "expense") or amount <= 0:
         return jsonify({"error": "invalid"}), 400
+    # Wallet linkage: account_id is optional (unlinked transactions still
+    # count toward totals/charts but move no wallet), but when present it
+    # MUST be one of the session user's own accounts.
+    account_id = data.get("account_id")
+    if account_id is not None:
+        account_id = _int(account_id, -1)
+        owned = db.q1(
+            "SELECT id FROM accounts WHERE id = ? AND user_id = ?",
+            (account_id, user["id"]))
+        if not owned:
+            return jsonify({"error": "bad_account"}), 400
     txn_date = (data.get("txn_date") or _today())[:10]
     new_id = db.insert(
         "INSERT INTO transactions (user_id, kind, amount, category, txn_date, "
-        "note, created_at) VALUES (?, ?, ?, ?, ?, ?, ?)",
+        "note, account_id, created_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?)",
         (user["id"], kind, amount, str(data.get("category") or ""),
-         txn_date, str(data.get("note") or ""), _now()),
+         txn_date, str(data.get("note") or ""), account_id, _now()),
     )
     return jsonify({"id": new_id})
 
@@ -513,14 +544,49 @@ def api_add_account():
     return jsonify({"id": new_id})
 
 
+@app.route("/api/accounts/<int:item_id>", methods=["PUT"])
+@login_required
+def api_update_account(item_id):
+    """Edit an account. `balance` here is the OPENING balance; the current
+    balance shown everywhere recomputes from it plus linked transactions."""
+    user = current_user()
+    row = db.q1("SELECT * FROM accounts WHERE id = ? AND user_id = ?",
+                (item_id, user["id"]))
+    if not row:
+        return jsonify({"error": "not_found"}), 404
+    data = request.get_json(silent=True) or {}
+    name = str(data.get("name", row["name"]) or "").strip()
+    if not name:
+        return jsonify({"error": "invalid"}), 400
+    opening = int(row["balance"] or 0)
+    if "balance" in data:
+        opening = _int(data.get("balance"), opening)
+    db.execute(
+        "UPDATE accounts SET name = ?, type = ?, brand = ?, balance = ?, "
+        "note = ? WHERE id = ? AND user_id = ?",
+        (name, str(data.get("type", row["type"]) or ""),
+         str(data.get("brand", row.get("brand") or "") or ""),
+         opening,
+         str(data.get("note", row.get("note") or "") or ""),
+         item_id, user["id"]),
+    )
+    return jsonify({"ok": True})
+
+
 @app.route("/api/accounts/<int:item_id>", methods=["DELETE"])
 @login_required
 def api_delete_account(item_id):
+    """Deleting a wallet UNLINKS its transactions (they keep counting in
+    totals/charts/history, they just move no wallet) and then removes the
+    wallet itself. The wallet's computed balance leaves net worth with it."""
     user = current_user()
     row = db.q1("SELECT id FROM accounts WHERE id = ? AND user_id = ?",
                 (item_id, user["id"]))
     if not row:
         return jsonify({"error": "not_found"}), 404
+    db.execute(
+        "UPDATE transactions SET account_id = NULL "
+        "WHERE account_id = ? AND user_id = ?", (item_id, user["id"]))
     db.execute("DELETE FROM accounts WHERE id = ? AND user_id = ?",
                (item_id, user["id"]))
     return jsonify({"ok": True})
@@ -736,6 +802,51 @@ def api_conversation_messages(username):
     return jsonify({"messages": [_msg(r, user["id"]) for r in rows]})
 
 
+def _costs_card(uid, scope):
+    """Build a share-costs card payload for one user, computed server-side.
+
+    scope "day":   the server's today (txn_date == _today()).
+    scope "month": the server's current calendar month
+                   (substr(txn_date,1,7) == _today()[:7]).
+    The date definitions match what /api/state exposes as server_today,
+    which the SPA also uses for its Home/monthly figures — one source of
+    truth (the server date) everywhere."""
+    today = _today()
+    if scope == "month":
+        month = today[:7]
+        rows = db.q(
+            "SELECT kind, category, note, amount FROM transactions "
+            "WHERE user_id = ? AND substr(txn_date, 1, 7) = ? ORDER BY id",
+            (uid, month),
+        )
+        card = {"scope": "month", "month": month, "txn_date": today}
+    else:
+        rows = db.q(
+            "SELECT kind, category, note, amount FROM transactions "
+            "WHERE user_id = ? AND txn_date = ? ORDER BY id",
+            (uid, today),
+        )
+        card = {"scope": "day", "txn_date": today}
+    items = [
+        {
+            "kind": r["kind"],
+            "category": r["category"],
+            "note": r.get("note") or "",
+            "amount": int(r["amount"]),
+        }
+        for r in rows
+    ]
+    income = sum(i["amount"] for i in items if i["kind"] == "income")
+    expense = sum(i["amount"] for i in items if i["kind"] == "expense")
+    card.update({
+        "income": income,
+        "expense": expense,
+        "leftover": income - expense,
+        "items": items,
+    })
+    return card
+
+
 def _message_gate(user):
     """Shared gates for sending user-to-user messages. Returns error tuple
     or None."""
@@ -782,30 +893,8 @@ def api_send_message():
         return jsonify({"error": "not_found"}), 404
 
     if data.get("type") == "card":
-        today = _today()
-        rows = db.q(
-            "SELECT kind, category, note, amount FROM transactions "
-            "WHERE user_id = ? AND txn_date = ? ORDER BY id",
-            (user["id"], today),
-        )
-        items = [
-            {
-                "kind": r["kind"],
-                "category": r["category"],
-                "note": r.get("note") or "",
-                "amount": int(r["amount"]),
-            }
-            for r in rows
-        ]
-        income = sum(i["amount"] for i in items if i["kind"] == "income")
-        expense = sum(i["amount"] for i in items if i["kind"] == "expense")
-        card = {
-            "income": income,
-            "expense": expense,
-            "leftover": income - expense,
-            "txn_date": today,
-            "items": items,
-        }
+        scope = "month" if data.get("scope") == "month" else "day"
+        card = _costs_card(user["id"], scope)
         new_id = db.insert(
             "INSERT INTO messages (sender_id, recipient_id, type, text, "
             "file_path, file_name, file_size, card, created_at) "

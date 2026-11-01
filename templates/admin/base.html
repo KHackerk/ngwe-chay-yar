@@ -222,7 +222,7 @@ html[data-theme="dark"] .sup-divider{color:#8CA08D}
       <div class="admin-prof">
         <span class="avatar">{{ initials(admin.name) }}</span>
         <div style="min-width:0"><div class="an">{{ admin.name }}</div><div class="ar">{{ s.role_owner if admin.role=='admin' else admin.role }}</div></div>
-        <a href="/logout" class="muted" style="margin-left:auto;font-size:12.5px;font-weight:600">{{ s.logout }}</a>
+        <a href="{{ url_for('admin_logout') }}" class="muted" style="margin-left:auto;font-size:12.5px;font-weight:600">{{ s.logout }}</a>
       </div>
     </div>
   </aside>

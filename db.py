@@ -165,6 +165,7 @@ _SQLITE_DDL = [
         category TEXT NOT NULL DEFAULT '',
         txn_date TEXT NOT NULL DEFAULT '',
         note TEXT NOT NULL DEFAULT '',
+        account_id INTEGER,
         created_at TEXT NOT NULL DEFAULT ''
     )
     """,
@@ -261,6 +262,7 @@ _PG_DDL = [
         category TEXT NOT NULL DEFAULT '',
         txn_date TEXT NOT NULL DEFAULT '',
         note TEXT NOT NULL DEFAULT '',
+        account_id INTEGER,
         created_at TEXT NOT NULL DEFAULT ''
     )
     """,
@@ -339,6 +341,27 @@ _DEFAULT_SETTINGS = {
 }
 
 
+def _migrate(conn, is_pg):
+    """Idempotent migrations for databases created by older builds.
+
+    transactions.account_id (wallet linkage) is a plain nullable INTEGER —
+    no REFERENCES clause, because the transactions DDL runs before the
+    accounts table exists and Postgres requires referenced tables to
+    pre-exist. Wallet ownership is enforced in the API layer instead.
+    """
+    if is_pg:
+        conn.execute(
+            "ALTER TABLE transactions "
+            "ADD COLUMN IF NOT EXISTS account_id INTEGER")
+    else:
+        cols = [r[1] for r in
+                conn.execute("PRAGMA table_info(transactions)").fetchall()]
+        if "account_id" not in cols:
+            conn.execute(
+                "ALTER TABLE transactions ADD COLUMN account_id INTEGER")
+    conn.commit()
+
+
 def init_db():
     """Create all tables if absent; seed ONLY the settings defaults."""
     conn, is_pg = _connect()
@@ -347,6 +370,7 @@ def init_db():
         for stmt in ddl:
             conn.execute(stmt)
         conn.commit()
+        _migrate(conn, is_pg)
     finally:
         conn.close()
     # Seed settings defaults only — never any user/demo content.

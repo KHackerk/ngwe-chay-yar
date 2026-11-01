@@ -59,7 +59,8 @@ class NoRedirect(urllib.request.HTTPRedirectHandler):
 
 
 class Session:
-    def __init__(self):
+    def __init__(self, base=None):
+        self.base = base or BASE
         self.jar = CookieJar()
         self.follow = urllib.request.build_opener(
             urllib.request.HTTPCookieProcessor(self.jar))
@@ -67,7 +68,7 @@ class Session:
             urllib.request.HTTPCookieProcessor(self.jar), NoRedirect())
 
     def req(self, method, path, body=None, ctype=None, follow=True):
-        url = BASE + path
+        url = self.base + path
         data = body.encode() if isinstance(body, str) else body
         r = urllib.request.Request(url, data=data, method=method)
         if ctype:
@@ -91,6 +92,14 @@ class Session:
 
     def post_json(self, path, obj):
         st, body, _ = self.req("POST", path, json.dumps(obj),
+                               "application/json")
+        try:
+            return st, json.loads(body)
+        except Exception:
+            return st, {}
+
+    def put_json(self, path, obj):
+        st, body, _ = self.req("PUT", path, json.dumps(obj),
                                "application/json")
         try:
             return st, json.loads(body)
@@ -170,8 +179,9 @@ def main():
     # ---- static SPA structure: share pill + card items ----------------------
     spa = open(os.path.join(APP_DIR, "templates", "index.html"),
                encoding="utf-8").read()
-    check("static: share pill markup exists once, built inside threadHTML",
-          spa.count('class="sharepill"') == 1
+    check("static: share pills (daily + monthly) built inside threadHTML",
+          spa.count('class="sharepill"') == 2
+          and "msg_share_cost_month" in spa
           and "function threadHTML(conv)" in spa
           and "return sharePillHTML() + conv.messages.map(bubbleHTML)" in spa)
     check("static: scrollable thread container is filled via threadHTML",
@@ -190,6 +200,21 @@ def main():
           len(key_sets) == 4
           and all(s == key_sets.get("en") for s in key_sets.values())
           and all("msg_more" in s for s in key_sets.values()))
+    new_keys = ("msg_share_cost_month", "msg_month_costs", "wallet_label",
+                "add_wallet_hint", "opening_balance_label")
+    check("static: wallet/monthly i18n keys present in all 4 languages",
+          all(all(k in s for k in new_keys) for s in key_sets.values()))
+    check("static: wallet picker + account_id wired in SPA",
+          'id="add-wallets"' in spa and "account_id:rec.account_id" in spa
+          and "function renderAddWallets()" in spa
+          and "function applyWalletDelta(" in spa)
+    admin_src = open(os.path.join(APP_DIR, "admin_routes.py"),
+                     encoding="utf-8").read()
+    app_src = open(os.path.join(APP_DIR, "app.py"), encoding="utf-8").read()
+    check("static: separate admin gate + account PUT + txn account_id",
+          "admin_ok" in admin_src and "def admin_logout" in admin_src
+          and "def _admin_session_user" in admin_src
+          and 'methods=["PUT"]' in app_src and "account_id" in app_src)
 
     # ---- boot --------------------------------------------------------------
     env = dict(os.environ)
@@ -277,6 +302,34 @@ def main():
               net == 91500000, str(net))
         a_txn_ids = {t["id"] for t in sa["transactions"]}
 
+        # ---- 3b. wallet linkage ---------------------------------------------
+        acct_id = sa["accounts"][0]["id"]
+        check("account exposes opening_balance == balance before linkage",
+              sa["accounts"][0]["opening_balance"] == 1500000
+              and sa["accounts"][0]["balance"] == 1500000,
+              str(sa["accounts"]))
+        st, r = a.post_json("/api/transactions", {
+            "kind": "income", "amount": 100000, "category": "Salary",
+            "txn_date": TODAY, "note": "Bonus", "account_id": acct_id})
+        link_id = r.get("id")
+        check("A links income 100,000 to KBZ Pay",
+              st == 200 and bool(link_id), f"st={st}")
+        st, sa = a.api("/api/state")
+        check("linked income moves computed balance to 1,600,000",
+              sa["accounts"][0]["balance"] == 1600000
+              and sa["accounts"][0]["opening_balance"] == 1500000,
+              str(sa["accounts"][0]))
+        st, r = a.post_json("/api/transactions", {
+            "kind": "expense", "amount": 100, "category": "Food",
+            "txn_date": TODAY, "note": "bad", "account_id": 999999})
+        check("linking to a nonexistent wallet -> 400", st == 400,
+              f"st={st}")
+        a.delete(f"/api/transactions/{link_id}")
+        st, sa = a.api("/api/state")
+        check("deleting the linked txn reverses the balance to 1,500,000",
+              sa["accounts"][0]["balance"] == 1500000,
+              str(sa["accounts"][0]))
+
         # ---- 4. register B ---------------------------------------------------
         b = Session()
         register(b, "Bob User", "bob@test.local", "bob-pass-1")
@@ -293,6 +346,53 @@ def main():
         login(bad, "alice@test.local", "wrong-password")
         st, _ = bad.api("/api/state")
         check("wrong-password login gets no session", st == 401, f"st={st}")
+
+        # ---- 4b. separate admin session gate ---------------------------------
+        st, _, hd = a.get("/admin/overview", follow=False)
+        check("gate: app-signed-in admin still blocked from /admin/overview",
+              st in (301, 302)
+              and "/admin/login" in (hd.get("Location") or ""), f"st={st}")
+        st, _, _ = a.post_form("/admin/login",
+                               {"email": "alice@test.local",
+                                "password": "wrong"}, follow=False)
+        check("gate: wrong admin password re-renders the form (no access)",
+              st == 200, f"st={st}")
+        st, _, hd = a.get("/admin/overview", follow=False)
+        check("gate: overview still blocked after wrong password",
+              st in (301, 302)
+              and "/admin/login" in (hd.get("Location") or ""), f"st={st}")
+        st, _, _ = b.post_form("/admin/login",
+                               {"email": "bob@test.local",
+                                "password": "bob-pass-1"}, follow=False)
+        check("gate: non-admin with CORRECT password rejected at /admin/login",
+              st == 200, f"st={st}")
+        st, _, hd = b.get("/admin/overview", follow=False)
+        check("gate: non-admin overview still blocked",
+              st in (301, 302)
+              and "/admin/login" in (hd.get("Location") or ""), f"st={st}")
+        st, _, hd = a.post_form("/admin/login",
+                                {"email": "alice@test.local",
+                                 "password": "alice-pass-1"}, follow=False)
+        check("gate: correct admin login redirects to /admin/overview",
+              st in (301, 302)
+              and "/admin/overview" in (hd.get("Location") or ""),
+              f"st={st} loc={hd.get('Location')}")
+        st, _, _ = a.get("/admin/overview")
+        check("gate: overview 200 after admin login", st == 200, f"st={st}")
+        st, _, hd = a.get("/admin/logout", follow=False)
+        check("gate: admin logout redirects to /admin/login",
+              st in (301, 302)
+              and "/admin/login" in (hd.get("Location") or ""), f"st={st}")
+        st, _, hd = a.get("/admin/overview", follow=False)
+        check("gate: overview blocked again after admin logout",
+              st in (301, 302)
+              and "/admin/login" in (hd.get("Location") or ""), f"st={st}")
+        a.post_form("/admin/login",
+                    {"email": "alice@test.local",
+                     "password": "alice-pass-1"})
+        st, _ = a.api("/api/state")
+        check("gate: app session untouched by admin login/logout cycle",
+              st == 200, f"st={st}")
 
         # ---- 5. usernames + search -------------------------------------------
         st, r = b.post_json("/api/username", {"username": "bobuser"})
@@ -354,10 +454,23 @@ def main():
         check("share-costs items are chronological as stored",
               [i.get("kind") for i in items] == ["income", "expense"],
               str(items))
+        check("daily share card carries scope=day",
+              card.get("scope") == "day", str(card.get("scope")))
+        st, r = a.post_json("/api/messages",
+                            {"to": "bobuser", "type": "card",
+                             "scope": "month"})
+        mcard = r.get("message", {})
+        check("monthly share card: scope/month/totals/items",
+              mcard.get("type") == "card" and mcard.get("scope") == "month"
+              and mcard.get("month") == TODAY[:7]
+              and mcard.get("income") == 2000000
+              and mcard.get("expense") == 500000
+              and mcard.get("leftover") == 1500000
+              and len(mcard.get("items") or []) == 2, str(mcard))
         st, conv = b.api("/api/conversations/aliceadmin/messages")
         msgs = conv.get("messages", [])
-        check("B receives all 3 A-messages",
-              len(msgs) == 3 and all(m["from"] == "them" for m in msgs),
+        check("B receives all 4 A-messages",
+              len(msgs) == 4 and all(m["from"] == "them" for m in msgs),
               f"n={len(msgs)}")
         bcard = next((m for m in msgs if m.get("type") == "card"), {})
         check("B's received card payload includes the same items",
@@ -508,7 +621,7 @@ def main():
                   for t in ("users", "transactions", "accounts", "assets",
                             "debts", "messages", "support_messages")}
         expect = {"users": 2, "transactions": 2, "accounts": 1, "assets": 1,
-                  "debts": 1, "messages": 5, "support_messages": 2}
+                  "debts": 1, "messages": 6, "support_messages": 2}
         check("DB holds exactly the test-created rows",
               counts == expect, f"counts={counts} expect={expect}")
         roles = con.execute(
@@ -534,7 +647,280 @@ def main():
             proc.wait(timeout=5)
         except Exception:
             proc.kill()
+    audit_phase()
     return finish(proc)
+
+
+# --------------------------------------------------------------------------
+# Part C audit: a second server booted on a PRE-MIGRATION database (old
+# transactions table WITHOUT account_id) proves the migration, then runs
+# the full wallet-linkage scenario where every surface must agree:
+# wallet balances, Home totals, month figures, chart/donut inputs, Top
+# Spending, daily + monthly share cards, and the admin aggregates.
+# --------------------------------------------------------------------------
+AUDIT_PORT = 5418
+AUDIT_BASE = f"http://127.0.0.1:{AUDIT_PORT}"
+
+
+def audit_phase():
+    old_db = f"/tmp/ncy_audit_{uuid.uuid4().hex[:8]}.db"
+    con = sqlite3.connect(old_db)
+    con.execute(
+        "CREATE TABLE transactions ("
+        " id INTEGER PRIMARY KEY AUTOINCREMENT,"
+        " user_id INTEGER NOT NULL,"
+        " kind TEXT NOT NULL DEFAULT 'expense',"
+        " amount INTEGER NOT NULL DEFAULT 0,"
+        " category TEXT NOT NULL DEFAULT '',"
+        " txn_date TEXT NOT NULL DEFAULT '',"
+        " note TEXT NOT NULL DEFAULT '',"
+        " created_at TEXT NOT NULL DEFAULT '')")
+    con.commit()
+    con.close()
+
+    env = dict(os.environ)
+    env["DATABASE_URL"] = f"sqlite:///{old_db}"
+    env["PORT"] = str(AUDIT_PORT)
+    env["SECRET_KEY"] = "e2e-audit-secret"
+    proc = subprocess.Popen(
+        [SERVER_PY, "app.py"], cwd=APP_DIR, env=env,
+        stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+    try:
+        up = False
+        for _ in range(60):
+            try:
+                st, _, _ = Session(AUDIT_BASE).get("/login")
+                up = st == 200
+                break
+            except Exception:
+                time.sleep(0.5)
+        check("audit: server boots on pre-migration DB", up)
+        if not up:
+            return
+        con = sqlite3.connect(old_db)
+        cols = [r[1] for r in
+                con.execute("PRAGMA table_info(transactions)")]
+        con.close()
+        check("audit: migration adds account_id to the old table",
+              "account_id" in cols, str(cols))
+
+        adm = Session(AUDIT_BASE)
+        register(adm, "Audit Admin", "admin2@test.local", "admin2-pass")
+        carol = Session(AUDIT_BASE)
+        register(carol, "Carol Audit", "carol2@test.local", "carol-pass")
+        adm.post_json("/api/username", {"username": "adminx"})
+        carol.post_json("/api/username", {"username": "carolx"})
+
+        st, r = carol.post_json("/api/accounts", {
+            "name": "Wallet A", "type": "cash", "brand": "",
+            "balance": 500000, "note": ""})
+        wa = r.get("id")
+        st, r = carol.post_json("/api/accounts", {
+            "name": "Wallet B", "type": "cash", "brand": "",
+            "balance": 200000, "note": ""})
+        wb = r.get("id")
+        check("audit: wallets A (500,000) and B (200,000) created",
+              bool(wa) and bool(wb), f"wa={wa} wb={wb}")
+        carol.post_json("/api/transactions", {
+            "kind": "income", "amount": 100000, "category": "Salary",
+            "txn_date": TODAY, "note": "Pay", "account_id": wa})
+        carol.post_json("/api/transactions", {
+            "kind": "expense", "amount": 220000, "category": "Food",
+            "txn_date": TODAY, "note": "Market", "account_id": wa})
+        st, r = carol.post_json("/api/transactions", {
+            "kind": "expense", "amount": 30000, "category": "Transport",
+            "txn_date": TODAY, "note": "Taxi", "account_id": wb})
+        taxi_id = r.get("id")
+        carol.post_json("/api/assets", {
+            "name": "House", "type": "House", "purchase_price": 900000,
+            "current_value": 1000000, "location": "", "note": ""})
+        carol.post_json("/api/debts", {"name": "Debt", "amount": 100000,
+                                       "note": ""})
+        st, sc = carol.api("/api/state")
+        accs = {x["name"]: x for x in sc["accounts"]}
+        check("audit: B = 170,000 before delete (200,000 - 30,000)",
+              accs["Wallet B"]["balance"] == 170000,
+              str(accs.get("Wallet B")))
+        check("audit: A = 380,000 before delete (500,000 + 100,000 - 220,000)",
+              accs["Wallet A"]["balance"] == 380000,
+              str(accs.get("Wallet A")))
+
+        carol.delete(f"/api/transactions/{taxi_id}")
+        st, sc = carol.api("/api/state")
+        accs = {x["name"]: x for x in sc["accounts"]}
+        check("audit: after delete A = 380,000, B = 200,000 (delete reverses)",
+              accs["Wallet A"]["balance"] == 380000
+              and accs["Wallet B"]["balance"] == 200000,
+              str({k: v["balance"] for k, v in accs.items()}))
+        check("audit: opening balances stay 500,000 / 200,000",
+              accs["Wallet A"]["opening_balance"] == 500000
+              and accs["Wallet B"]["opening_balance"] == 200000)
+        inc, exp, left, net = totals(sc)
+        acct_total = sum(x["balance"] for x in sc["accounts"])
+        check("audit: accounts total = 580,000", acct_total == 580000,
+              str(acct_total))
+        check("audit: net worth = 580,000 + 1,000,000 - 100,000 = 1,480,000",
+              net == 1480000, str(net))
+        check("audit: month income/expense/leftover = 100,000/220,000/-120,000",
+              (inc, exp, left) == (100000, 220000, -120000),
+              str((inc, exp, left)))
+        by = {}
+        for trow in sc["transactions"]:
+            if (trow["kind"] == "expense"
+                    and trow["txn_date"].startswith(TODAY[:7])):
+                by[trow["category"]] = by.get(trow["category"], 0) \
+                    + trow["amount"]
+        check("audit: Top Spending sums to 220,000 (Food only, post-delete)",
+              sum(by.values()) == 220000 and by.get("Food") == 220000,
+              str(by))
+
+        st, r = carol.post_json("/api/messages",
+                                {"to": "adminx", "type": "card"})
+        card = r.get("message", {})
+        check("audit: daily card = today's figures, 2 items",
+              card.get("scope") == "day" and card.get("income") == 100000
+              and card.get("expense") == 220000
+              and card.get("leftover") == -120000
+              and len(card.get("items") or []) == 2, str(card))
+        st, r = carol.post_json("/api/messages",
+                                {"to": "adminx", "type": "card",
+                                 "scope": "month"})
+        mcard = r.get("message", {})
+        check("audit: monthly card = month's figures, scope+month set",
+              mcard.get("scope") == "month" and mcard.get("month") == TODAY[:7]
+              and mcard.get("income") == 100000
+              and mcard.get("expense") == 220000
+              and mcard.get("leftover") == -120000
+              and len(mcard.get("items") or []) == 2, str(mcard))
+
+        # Admin views — through a FRESH session that only admin-logs in
+        # (no app session at all), proving the gate's independence.
+        gate = Session(AUDIT_BASE)
+        st, _, hd = gate.get("/admin/overview", follow=False)
+        check("audit: fresh session blocked from /admin/overview",
+              st in (301, 302)
+              and "/admin/login" in (hd.get("Location") or ""), f"st={st}")
+        gate.post_form("/admin/login", {"email": "admin2@test.local",
+                                        "password": "admin2-pass"})
+        st, body, _ = gate.get("/admin/overview")
+        html = body.decode("utf-8", "ignore")
+        stats = re.findall(r'class="sv num">([^<]+)<', html)
+        check("audit: admin overview stats = 2/2/2/2",
+              stats[:4] == ["2", "2", "2", "2"], f"stats={stats[:4]}")
+        check("audit: admin flow shows 100,000 / 220,000 / 120,000",
+              "100,000" in html and "220,000" in html
+              and "120,000" in html)
+        st, body, _ = gate.get("/admin/users")
+        html = body.decode("utf-8", "ignore")
+        check("audit: admin Users shows Carol net worth 1,480,000",
+              "Carol Audit" in html and "1,480,000" in html)
+        st, body, _ = gate.get("/admin/transactions")
+        html = body.decode("utf-8", "ignore")
+        check("audit: admin Transactions = Salary + Food, no Transport",
+              "Salary" in html and "Food" in html
+              and "Transport" not in html)
+
+        st, sa2 = adm.api("/api/state")
+        check("audit: admin's own finance state is empty (isolation)",
+              sa2["transactions"] == [] and sa2["accounts"] == [])
+        check("audit: Carol's state holds exactly her 2 transactions",
+              len(sc["transactions"]) == 2, str(len(sc["transactions"])))
+
+        # overspend -> negative computed balance, no clamping
+        st, r = carol.post_json("/api/transactions", {
+            "kind": "expense", "amount": 500000, "category": "Bills",
+            "txn_date": TODAY, "note": "Big bill", "account_id": wb})
+        big_id = r.get("id")
+        st, sc = carol.api("/api/state")
+        accs = {x["name"]: x for x in sc["accounts"]}
+        check("audit: overspend takes B to -300,000 (no clamping)",
+              accs["Wallet B"]["balance"] == -300000,
+              str(accs.get("Wallet B")))
+        carol.delete(f"/api/transactions/{big_id}")
+        st, sc = carol.api("/api/state")
+        accs = {x["name"]: x for x in sc["accounts"]}
+        check("audit: deleting the overspend restores B to 200,000",
+              accs["Wallet B"]["balance"] == 200000)
+
+        # cross-user + bogus linkage rejected
+        st, r = adm.post_json("/api/accounts", {
+            "name": "AdminWallet", "type": "cash", "brand": "",
+            "balance": 1000, "note": ""})
+        adm_wallet = r.get("id")
+        st, _ = carol.post_json("/api/transactions", {
+            "kind": "expense", "amount": 100, "category": "Food",
+            "txn_date": TODAY, "note": "x", "account_id": adm_wallet})
+        check("audit: linking to another user's wallet -> 400",
+              st == 400, f"st={st}")
+        st, _ = carol.post_json("/api/transactions", {
+            "kind": "expense", "amount": 100, "category": "Food",
+            "txn_date": TODAY, "note": "x", "account_id": 999999})
+        check("audit: linking to a bogus wallet -> 400", st == 400,
+              f"st={st}")
+
+        # editing the OPENING balance recomputes the current balance
+        st, _ = carol.put_json(f"/api/accounts/{wa}", {"balance": 600000})
+        check("audit: PUT opening balance accepted", st == 200, f"st={st}")
+        st, sc = carol.api("/api/state")
+        accs = {x["name"]: x for x in sc["accounts"]}
+        check("audit: A recomputes to 480,000 (600,000 + 100,000 - 220,000)",
+              accs["Wallet A"]["balance"] == 480000
+              and accs["Wallet A"]["opening_balance"] == 600000,
+              str(accs.get("Wallet A")))
+
+        dave = Session(AUDIT_BASE)
+        register(dave, "Dave Audit", "dave@test.local", "dave-pass")
+        st, _ = dave.put_json(f"/api/accounts/{wa}", {"balance": 1})
+        check("audit: PUT another user's account -> 404", st == 404,
+              f"st={st}")
+        st, r = dave.post_json("/api/transactions", {
+            "kind": "expense", "amount": 5000, "category": "Food",
+            "txn_date": TODAY, "note": "solo"})
+        check("audit: user with no wallets can save an unlinked txn",
+              st == 200, f"st={st}")
+        st, sd = dave.api("/api/state")
+        check("audit: unlinked txn has account_id null",
+              len(sd["transactions"]) == 1
+              and sd["transactions"][0]["account_id"] is None,
+              str(sd["transactions"]))
+        st, _ = dave.post_json("/api/transactions", {
+            "kind": "expense", "amount": 100, "category": "Food",
+            "txn_date": TODAY, "note": "x", "account_id": wa})
+        check("audit: Dave linking to Carol's wallet -> 400", st == 400,
+              f"st={st}")
+
+        # deleting a wallet UNLINKS its transactions (history survives)
+        st, r = carol.post_json("/api/accounts", {
+            "name": "Temp Wallet", "type": "cash", "brand": "",
+            "balance": 50000, "note": ""})
+        tw = r.get("id")
+        st, r = carol.post_json("/api/transactions", {
+            "kind": "expense", "amount": 10000, "category": "Other",
+            "txn_date": TODAY, "note": "temp", "account_id": tw})
+        temp_txn = r.get("id")
+        st, sc = carol.api("/api/state")
+        accs = {x["name"]: x for x in sc["accounts"]}
+        check("audit: Temp Wallet computes 40,000; accounts total 720,000",
+              accs["Temp Wallet"]["balance"] == 40000
+              and sum(x["balance"] for x in sc["accounts"]) == 720000,
+              str({k: v["balance"] for k, v in accs.items()}))
+        carol.delete(f"/api/accounts/{tw}")
+        st, sc = carol.api("/api/state")
+        trow = next((x for x in sc["transactions"]
+                     if x["id"] == temp_txn), None)
+        inc, exp, left, net = totals(sc)
+        check("audit: wallet deleted -> txn survives unlinked, total 680,000",
+              trow is not None and trow["account_id"] is None
+              and sum(x["balance"] for x in sc["accounts"]) == 680000,
+              str(trow))
+        check("audit: month expense now 230,000 (unlinked still counts)",
+              exp == 230000, str(exp))
+    finally:
+        proc.terminate()
+        try:
+            proc.wait(timeout=5)
+        except Exception:
+            proc.kill()
 
 
 def finish(proc):
