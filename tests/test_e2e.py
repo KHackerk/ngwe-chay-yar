@@ -167,6 +167,30 @@ def main():
     check("static: no demo names/seed code in app files", not hits,
           f"hits={hits}")
 
+    # ---- static SPA structure: share pill + card items ----------------------
+    spa = open(os.path.join(APP_DIR, "templates", "index.html"),
+               encoding="utf-8").read()
+    check("static: share pill markup exists once, built inside threadHTML",
+          spa.count('class="sharepill"') == 1
+          and "function threadHTML(conv)" in spa
+          and "return sharePillHTML() + conv.messages.map(bubbleHTML)" in spa)
+    check("static: scrollable thread container is filled via threadHTML",
+          'id="chat-msgs">\'+threadHTML(conv2)' in spa
+          and "box.innerHTML = threadHTML(conv);" in spa)
+    pill_css = re.search(r"\.sharepill\{([^}]*)\}", spa)
+    check("static: share pill itself is not sticky/fixed",
+          pill_css is not None and "sticky" not in pill_css.group(1)
+          and "fixed" not in pill_css.group(1))
+    check("static: card renderer has items branch + totals-only fallback",
+          "(m.items && m.items.length)" in spa and "msg_more" in spa)
+    strings_m = re.search(r"var STRINGS = (\{.*?\});\n", spa, re.S)
+    strings = json.loads(strings_m.group(1)) if strings_m else {}
+    key_sets = {k: set(v) for k, v in strings.items()}
+    check("static: i18n key sets identical across all 4 languages",
+          len(key_sets) == 4
+          and all(s == key_sets.get("en") for s in key_sets.values())
+          and all("msg_more" in s for s in key_sets.values()))
+
     # ---- boot --------------------------------------------------------------
     env = dict(os.environ)
     env["DATABASE_URL"] = f"sqlite:///{DB_PATH}"
@@ -316,11 +340,30 @@ def main():
               card.get("type") == "card" and card.get("income") == 2000000
               and card.get("expense") == 500000
               and card.get("leftover") == 1500000, str(card))
+        items = card.get("items") or []
+        by_kind = {i.get("kind"): i for i in items}
+        check("share-costs card carries itemised today's transactions",
+              len(items) == 2
+              and by_kind.get("income", {}).get("amount") == 2000000
+              and by_kind.get("income", {}).get("category") == "Salary"
+              and by_kind.get("income", {}).get("note") == "Monthly salary"
+              and by_kind.get("expense", {}).get("amount") == 500000
+              and by_kind.get("expense", {}).get("category") == "Food"
+              and by_kind.get("expense", {}).get("note") == "Groceries",
+              str(items))
+        check("share-costs items are chronological as stored",
+              [i.get("kind") for i in items] == ["income", "expense"],
+              str(items))
         st, conv = b.api("/api/conversations/aliceadmin/messages")
         msgs = conv.get("messages", [])
         check("B receives all 3 A-messages",
               len(msgs) == 3 and all(m["from"] == "them" for m in msgs),
               f"n={len(msgs)}")
+        bcard = next((m for m in msgs if m.get("type") == "card"), {})
+        check("B's received card payload includes the same items",
+              len(bcard.get("items") or []) == 2
+              and {i.get("category") for i in bcard.get("items") or []}
+              == {"Salary", "Food"}, str(bcard))
         st, r = b.post_json("/api/messages",
                             {"to": "aliceadmin", "text": "Hi A, got it"})
         reply_id = r.get("message", {}).get("id")
@@ -330,6 +373,33 @@ def main():
         new = conv.get("messages", [])
         check("A polling after=<id> returns only B's reply",
               len(new) == 1 and new[0]["text"] == "Hi A, got it", str(new))
+        # a legacy card stored before items existed (its stored JSON has no
+        # "items" key) must still be served with its totals intact; the row
+        # is removed again so the DB-exactness section below is unaffected
+        con = sqlite3.connect(DB_PATH)
+        uid = {e: i for i, e in
+               con.execute("SELECT id, email FROM users")}
+        legacy_json = json.dumps({"income": 7000, "expense": 2000,
+                                  "leftover": 5000, "txn_date": TODAY})
+        cur = con.execute(
+            "INSERT INTO messages (sender_id, recipient_id, type, text, "
+            "file_path, file_name, file_size, card, created_at) "
+            "VALUES (?, ?, 'card', '', '', '', 0, ?, ?)",
+            (uid["alice@test.local"], uid["bob@test.local"], legacy_json,
+             TODAY + "T06:00:00"))
+        legacy_id = cur.lastrowid
+        con.commit()
+        st, conv = b.api("/api/conversations/aliceadmin/messages")
+        legacy = next((m for m in conv.get("messages", [])
+                       if m.get("id") == legacy_id), {})
+        check("legacy card without items is served totals-only",
+              legacy.get("type") == "card" and legacy.get("income") == 7000
+              and legacy.get("expense") == 2000
+              and legacy.get("leftover") == 5000
+              and not legacy.get("items"), str(legacy))
+        con.execute("DELETE FROM messages WHERE id = ?", (legacy_id,))
+        con.commit()
+        con.close()
 
         # ---- 7. support round-trip -------------------------------------------
         st, r = b.post_json("/api/support", {"text": "I need help"})

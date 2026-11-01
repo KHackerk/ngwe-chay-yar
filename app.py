@@ -319,6 +319,7 @@ def _msg(row, my_id):
         "income": card.get("income"),
         "expense": card.get("expense"),
         "leftover": card.get("leftover"),
+        "items": card.get("items"),
         "txn_date": card.get("txn_date", ""),
         "time": _time_of(row.get("created_at") or ""),
         "ts": row.get("created_at") or "",
@@ -337,6 +338,7 @@ def _support_msg(row):
         "income": None,
         "expense": None,
         "leftover": None,
+        "items": None,
         "txn_date": "",
         "time": _time_of(row.get("created_at") or ""),
         "ts": row.get("created_at") or "",
@@ -782,18 +784,27 @@ def api_send_message():
     if data.get("type") == "card":
         today = _today()
         rows = db.q(
-            "SELECT kind, COALESCE(SUM(amount), 0) AS total FROM transactions "
-            "WHERE user_id = ? AND txn_date = ? GROUP BY kind",
+            "SELECT kind, category, note, amount FROM transactions "
+            "WHERE user_id = ? AND txn_date = ? ORDER BY id",
             (user["id"], today),
         )
-        totals = {r["kind"]: r["total"] for r in rows}
-        income = int(totals.get("income", 0))
-        expense = int(totals.get("expense", 0))
+        items = [
+            {
+                "kind": r["kind"],
+                "category": r["category"],
+                "note": r.get("note") or "",
+                "amount": int(r["amount"]),
+            }
+            for r in rows
+        ]
+        income = sum(i["amount"] for i in items if i["kind"] == "income")
+        expense = sum(i["amount"] for i in items if i["kind"] == "expense")
         card = {
             "income": income,
             "expense": expense,
             "leftover": income - expense,
             "txn_date": today,
+            "items": items,
         }
         new_id = db.insert(
             "INSERT INTO messages (sender_id, recipient_id, type, text, "
