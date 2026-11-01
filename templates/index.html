@@ -428,6 +428,8 @@ body.lang-zh .lbl,body.lang-zh .sl,body.lang-zh .field label,body.lang-zh .dayhe
 .bub.cardmsg .crow span{color:var(--glass-hi)}
 .bub.cardmsg .crow b{font-weight:650}
 .bub.cardmsg .cdiv{border-top:1px solid rgba(255,255,255,.18);margin:6px 0 3px}
+.bub.me.cardmsg{border-radius:18px 18px 6px 18px}
+.bub.them.cardmsg{border-radius:18px 18px 18px 6px}
 .chat-img{max-width:220px;width:100%;border-radius:12px;display:block}
 .chat-vid{max-width:230px;width:100%;border-radius:12px;display:block}
 .filecard{display:flex;align-items:center;gap:10px;min-width:180px}
@@ -2111,7 +2113,10 @@ function msgBody(m){
   return '<span class="filecard"><span class="fic">'+svgI(MSG_ICONS.file)+'</span><span class="tm"><span class="fn">'+esc(m.name||t('msg_file_label'))+'</span><span class="fs">'+esc(t('msg_file_label'))+' · '+esc(fmtBytes(m.size))+'</span>'+note+'</span></span>';
 }
 function bubbleHTML(m){
-  var cls = m.type==='card' ? 'bub me cardmsg' : ('bub '+(m.from==='me'?'me':'them'));
+  /* Direction (me/them) is chosen from m.from for EVERY message type first;
+     cardmsg is only an extra surface class for cost cards. (Cards used to
+     hard-code 'me' here, so received cards rendered as if sent by the viewer.) */
+  var cls = 'bub '+(m.from==='me'?'me':'them')+(m.type==='card'?' cardmsg':'');
   return '<div class="'+cls+'">'+msgBody(m)+'<span class="btime">'+esc(m.time||'')+'</span></div>';
 }
 function renderMessage(){

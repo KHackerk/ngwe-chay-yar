@@ -193,6 +193,14 @@ def main():
           and "fixed" not in pill_css.group(1))
     check("static: card renderer has items branch + totals-only fallback",
           "(m.items && m.items.length)" in spa and "msg_more" in spa)
+    bub_m = re.search(r"function bubbleHTML\(m\)\{(.*?)\n\}", spa, re.S)
+    bub = bub_m.group(1) if bub_m else ""
+    check("static: bubble direction comes from m.from for every type "
+          "(cards must not hard-code the own-message class)",
+          "m.type==='card' ? 'bub me cardmsg'" not in spa
+          and "var cls = 'bub '+(m.from==='me'?'me':'them')"
+              "+(m.type==='card'?' cardmsg':'');" in bub,
+          bub.strip()[:140])
     strings_m = re.search(r"var STRINGS = (\{.*?\});\n", spa, re.S)
     strings = json.loads(strings_m.group(1)) if strings_m else {}
     key_sets = {k: set(v) for k, v in strings.items()}
@@ -486,6 +494,40 @@ def main():
         new = conv.get("messages", [])
         check("A polling after=<id> returns only B's reply",
               len(new) == 1 and new[0]["text"] == "Hi A, got it", str(new))
+        # ---- 6b. direction matrix: every type, both perspectives --------------
+        # the POST responses are what the sender's SPA appends locally, so
+        # their direction field must already say "me" for the sender
+        check("POST responses mark the sender's own attachment/cards as me",
+              att.get("message", {}).get("from") == "me"
+              and card.get("from") == "me" and mcard.get("from") == "me",
+              f"att={att.get('message', {}).get('from')} "
+              f"card={card.get('from')} mcard={mcard.get('from')}")
+
+        def _dirs(rows):
+            out = {}
+            for m in rows:
+                key = m.get("type") or ""
+                if key == "card":
+                    key += ":" + (m.get("scope") or "day")
+                out.setdefault(key, set()).add(m.get("from"))
+            return out
+
+        st, conv_b2 = b.api("/api/conversations/aliceadmin/messages")
+        bdirs = _dirs(conv_b2.get("messages", []))
+        check("direction matrix (B view): A's text/image/daily+monthly cards "
+              "are all 'them', B's own reply is 'me'",
+              bdirs.get("image") == {"them"}
+              and bdirs.get("card:day") == {"them"}
+              and bdirs.get("card:month") == {"them"}
+              and bdirs.get("text") == {"them", "me"}, str(bdirs))
+        st, conv_a2 = a.api("/api/conversations/bobuser/messages")
+        adirs = _dirs(conv_a2.get("messages", []))
+        check("direction matrix (A view): A's text/image/daily+monthly cards "
+              "are all 'me', B's reply is 'them'",
+              adirs.get("image") == {"me"}
+              and adirs.get("card:day") == {"me"}
+              and adirs.get("card:month") == {"me"}
+              and adirs.get("text") == {"me", "them"}, str(adirs))
         # a legacy card stored before items existed (its stored JSON has no
         # "items" key) must still be served with its totals intact; the row
         # is removed again so the DB-exactness section below is unaffected
