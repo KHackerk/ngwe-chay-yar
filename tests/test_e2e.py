@@ -224,6 +224,101 @@ def main():
           and "def _admin_session_user" in admin_src
           and 'methods=["PUT"]' in app_src and "account_id" in app_src)
 
+    # ---- static SPA structure: UI13 build (spend card / people / brand
+    #      card / chat height / about page / assets-debts split / hero) -----
+    spend_i = spa.find('id="h-spend"')
+    nw_i = spa.find('id="h-networth"')
+    check("static: month-spend hero is a card sharing the net-worth card "
+          "class and still binds to the same computed value",
+          spend_i > 0 and nw_i > 0
+          and 'class="card spendcard"' in spa[max(0, spend_i - 1000):spend_i]
+          and 'class="card hero"' in spa[max(0, nw_i - 300):nw_i]
+          and "el('h-spend').textContent = mmk(tt.expense)" in spa
+          and 'id="h-spend-month"' in spa and "first_month" in spa
+          and "spendwrap" not in spa)
+    check("static: Message home has no standing People section; search "
+          "results are transient and chats remain",
+          "msg_people" not in spa and "renderPeople" not in spa
+          and "function renderSearchResults()" in spa
+          and 'id="msg-results-card"' in spa
+          and 'id="msg-search-in"' in spa and 'id="msg-convs"' in spa
+          and "/api/users/search" in spa)
+    acct_i = spa.find('id="page-account"')
+    acct_j = spa.find('id="page-accounts"')
+    acct_sec = spa[acct_i:acct_j] if 0 < acct_i < acct_j else ""
+    check("static: Account page brand/member card removed; profile card "
+          "and menu rows intact",
+          "membercard" not in spa and "member_sub" not in spa
+          and 'id="ac-avatar"' in acct_sec
+          and 'id="profile-form"' in acct_sec
+          and "account_information" in acct_sec)
+    check("static: chat views are full-height flex columns with a "
+          "scrolling bubbles area (Message + Support)",
+          ".msg-layout.chat-open{" in spa and "100dvh" in spa
+          and ".msg-right .bubbles{flex:1;min-height:0;overflow-y:auto}"
+              in spa
+          and ".sup-wrap .bubbles{flex:1;min-height:0;overflow-y:auto}"
+              in spa
+          and ".sup-wrap{display:flex;flex-direction:column}" in spa
+          and ".msg-right .composer,.sup-wrap .composer{position:static"
+              in spa
+          and "max-height:54vh" not in spa)
+    about_i = spa.find('id="page-about"')
+    about_j = spa.find("</section>", about_i) if about_i > 0 else -1
+    about_sec = spa[about_i:about_j] if about_i > 0 and about_j > about_i \
+        else ""
+    about_keys = ("about_intro", "about_features_title", "about_f1",
+                  "about_f2", "about_f3", "about_f4", "about_f5",
+                  "about_f6", "about_f7", "about_promise_title",
+                  "about_promise", "about_support_text",
+                  "about_support_btn", "about_version")
+    check("static: dedicated About page exists with only about content",
+          about_i > 0 and "about_intro" in about_sec
+          and "about_f1" in about_sec and "about_f7" in about_sec
+          and "settings-lang" not in about_sec
+          and "theme-switch" not in about_sec
+          and "settings-msg" not in about_sec
+          and "onclick=\"go('support')\"" in about_sec
+          and 'id="about-year"' in about_sec)
+    check("static: Account About row routes to the About page; about i18n "
+          "keys present in all 4 languages",
+          "onclick=\"go('about')\"" in spa
+          and "function renderAbout()" in spa
+          and "about:'about'" in spa
+          and all(all(k in s for k in about_keys)
+                  for s in key_sets.values()))
+    as_i = spa.find('id="page-assets"')
+    db_i = spa.find('id="page-debts"')
+    st_i = spa.find('id="page-settings"')
+    as_sec = spa[as_i:db_i] if 0 < as_i < db_i else ""
+    db_sec = spa[db_i:st_i] if 0 < db_i < st_i else ""
+    check("static: Assets and Debts are separate views with distinct "
+          "Account menu routing",
+          as_i > 0 and db_i > as_i and st_i > db_i
+          and 'id="as-list"' in as_sec and "addDebt" not in as_sec
+          and 'id="db-list"' not in as_sec
+          and 'id="db-list"' in db_sec and "addAsset" not in db_sec
+          and 'id="as-list"' not in db_sec
+          and "onclick=\"go('debts')\"" in spa
+          and "function renderDebts()" in spa
+          and "debts:'debts'" in spa)
+    hg_m = re.search(r"\.hero-grid\{([^}]*)\}", spa)
+    check("static: net-worth breakdown is one 3-column row; Home "
+          "bindings unchanged",
+          hg_m is not None and "1fr 1fr 1fr" in hg_m.group(1)
+          and all(x in spa for x in ('id="h-networth"',
+                                     'id="h-b-accounts"',
+                                     'id="h-b-assets"',
+                                     'id="h-b-debts"'))
+          and "el('h-b-accounts').textContent" in spa
+          and "el('h-b-assets').textContent" in spa
+          and "el('h-b-debts').textContent" in spa)
+    check("static: desktop refinements (4-across stat grid, centred "
+          "About column, debts page width cap)",
+          ".statgrid{grid-template-columns:repeat(4,1fr)}" in spa
+          and ".about-col{max-width:720px" in spa
+          and "#page-debts .card" in spa)
+
     # ---- boot --------------------------------------------------------------
     env = dict(os.environ)
     env["DATABASE_URL"] = f"sqlite:///{DB_PATH}"
